@@ -1,0 +1,34 @@
+﻿{
+  "name": "EmptyBot",
+  "services": [
+    {
+      "type": "endpoint",
+      "name": "development",
+      "endpoint": "http://localhost:3978/api/messages",
+      "appId": "",
+      "appPassword": "",
+      "id": "1"
+    },
+    {
+      "type": "endpoint",
+      "name": "production",
+      "endpoint": "https://EmptyBot.azurewebsites.net/api/messages",
+      "appId": "",
+      "appPassword": "<YOUR APP PASSWORD>",
+      "id": "2"
+    },
+    {
+      "type": "luis",
+      "name": "EventBot",
+      "verbose":  true,
+      "appId": "436a54ca-76d6-489a-9eaf-8423eb54ffb2",
+      "version": "0.1",
+      "authoringKey": "6fc73b0da1984ae09bf3ee2dd8ac5ae0",
+      "subscriptionKey": "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/436a54ca-76d6-489a-9eaf-8423eb54ffb2?verbose=true&timezoneOffset=-360&subscription-key=6fc73b0da1984ae09bf3ee2dd8ac5ae0&q=",
+      "region": "westus",
+      "id": "158"
+    }
+  ],
+  "padlock": "",
+  "version": "2.0"
+}
