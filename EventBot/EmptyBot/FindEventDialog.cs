@@ -59,7 +59,7 @@ namespace EventBot
             WaterfallStepContext stepContext,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            string date = EventBot.eventParam.Date;
+            string date = EventBot.eventParams.Date;
             if (date != null)
             {
                 stepContext.Values["date"] = date;
@@ -83,7 +83,7 @@ namespace EventBot
             WaterfallStepContext stepContext,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            string city = EventBot.eventParam.City;
+            string city = EventBot.eventParams.City;
             if (stepContext.Result != null)
             {
                 DateTimeResolution resolution = (stepContext.Result as IList<DateTimeResolution>).First();
@@ -117,7 +117,7 @@ namespace EventBot
             }
             else
             {
-                city = EventBot.eventParam.City;
+                city = EventBot.eventParams.City;
             }
 
             return await stepContext.PromptAsync(
@@ -172,7 +172,7 @@ namespace EventBot
             var genre = stepContext.Result;
             stepContext.Values["genre"] = genre;
 
-            Event eventOptions = new Event
+            EventParams eventParams = new EventParams
             {
                 Date = (string)stepContext.Values["date"],
                 Radius = (float)stepContext.Values["radius"],
@@ -181,7 +181,7 @@ namespace EventBot
             };
 
             // Return the collected information to the parent context.
-            return await stepContext.EndDialogAsync(eventOptions, cancellationToken);
+            return await stepContext.EndDialogAsync(eventParams, cancellationToken);
         }
 
         private async Task<bool> DateValidatorAsync(

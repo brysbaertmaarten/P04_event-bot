@@ -19,7 +19,7 @@ namespace EventBot
         public static string EventAccessorKey { get; } = "EventBotAccessors.Event";
 
         public IStatePropertyAccessor<DialogState> DialogStateAccessor { get; set; }
-        public IStatePropertyAccessor<Event> EventAccessor { get; set; }
+        public IStatePropertyAccessor<EventParams> EventAccessor { get; set; }
 
         public ConversationState ConversationState { get; }
     }

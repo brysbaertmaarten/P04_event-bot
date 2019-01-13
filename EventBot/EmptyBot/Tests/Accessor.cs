@@ -57,7 +57,7 @@ namespace EventBot.Tests
                 var eventState = await accessors.EventAccessor.GetAsync(turnContext, () => null, cancellationToken);
 
                 // nieuw evenement maken op basis van wat de gebruiker stuurde
-                Event newEvent = new Event()
+                EventParams newEvent = new EventParams()
                 {
                     Genre = value,
                 };

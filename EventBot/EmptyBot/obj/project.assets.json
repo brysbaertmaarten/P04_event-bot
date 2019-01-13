@@ -13478,11 +13478,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\repos3\\EventBot\\EventBot\\EmptyBot\\EventBot.csproj",
+      "projectUniqueName": "C:\\repos3\\P04_event-bot\\EventBot\\EmptyBot\\EventBot.csproj",
       "projectName": "EventBot",
-      "projectPath": "C:\\repos3\\EventBot\\EventBot\\EmptyBot\\EventBot.csproj",
+      "projectPath": "C:\\repos3\\P04_event-bot\\EventBot\\EmptyBot\\EventBot.csproj",
       "packagesPath": "C:\\Users\\maarten\\.nuget\\packages\\",
-      "outputPath": "C:\\repos3\\EventBot\\EventBot\\EmptyBot\\obj\\",
+      "outputPath": "C:\\repos3\\P04_event-bot\\EventBot\\EmptyBot\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

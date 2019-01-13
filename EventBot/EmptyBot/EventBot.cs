@@ -24,7 +24,7 @@ namespace EventBot
         private readonly FindEventDialog findEventDialog;
         private readonly BotServices services;
 
-        public static Event eventParam = new Event();
+        public static EventParams eventParams = new EventParams();
 
         public EventBot(EventBotAccessors accessors, FindEventDialog findEventDialog, BotServices services)
         {
@@ -36,6 +36,7 @@ namespace EventBot
                 throw new System.ArgumentException($"Invalid configuration....");
             }
         }
+
         public async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (turnContext.Activity.Type == ActivityTypes.Message)
@@ -48,8 +49,12 @@ namespace EventBot
                 var location = entities["Places_AbsoluteLocation"];
                 var intent = recognizerResult?.GetTopScoringIntent().intent;
 
-                //Event eventOptions = await accessors.EventAccessor.GetAsync(
-                //   turnContext, () => null, cancellationToken);
+                // service TEST
+                EventParams testEventParams = new EventParams()
+                {
+                    City = "Ghent",
+                };
+                //List<Event> result = await EventService.GetEventsAsync(testEventParams);
 
                 // Generate a dialog context for our dialog set.
                 DialogContext dc = await findEventDialog._dialogSet.CreateContextAsync(turnContext, cancellationToken);
@@ -60,7 +65,7 @@ namespace EventBot
                     try
                     {
                         DateTime d = ParseLuisTest.ParseDateEntitie(text);
-                        eventParam.Date = d.ToString();
+                        eventParams.Date = d.ToString();
                     }
                     catch (Exception)
                     {
@@ -70,7 +75,7 @@ namespace EventBot
                 if (location != null)
                 {
                     string loc = location[0].ToString();
-                    eventParam.City = loc;
+                    eventParams.City = loc;
                 }
 
                 // Als er geen dialoog bezig is
@@ -108,15 +113,15 @@ namespace EventBot
                     if (dialogTurnResult.Status is DialogTurnStatus.Complete)
                     {
                         // opgegeven waarden wegschrijven naar eventParam
-                        eventParam = (Event)dialogTurnResult.Result;
+                        eventParams = (EventParams)dialogTurnResult.Result;
 
                         // Send a confirmation message to the user (iets doen met de data)
                         await turnContext.SendActivityAsync(
-                            $"I am looking for events with genre {eventParam.Genre} not further than {eventParam.Radius}km from {eventParam.City} on {eventParam.Date.ToString()}",
+                            $"I am looking for events with genre {eventParams.Genre} not further than {eventParams.Radius}km from {eventParams.City} on {eventParams.Date.ToString()}",
                             cancellationToken: cancellationToken);
 
                         // object terug leegmaken
-                        eventParam = new Event();
+                        eventParams = new EventParams();
                     }
                 }
 

@@ -106,7 +106,7 @@ namespace EventBot
                 var accessors = new EventBotAccessors(conversationState)
                 {
                     DialogStateAccessor = conversationState.CreateProperty<DialogState>(EventBotAccessors.DialogStateAccessorKey),
-                    EventAccessor = conversationState.CreateProperty<Event>(EventBotAccessors.EventAccessorKey),
+                    EventAccessor = conversationState.CreateProperty<EventParams>(EventBotAccessors.EventAccessorKey),
                 };
 
                 return accessors;
