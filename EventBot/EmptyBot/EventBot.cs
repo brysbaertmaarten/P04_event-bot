@@ -43,40 +43,10 @@ namespace EventBot
             {
                 // input doorsturen naar LUIS API
                 var recognizerResult = await services.LuisServices[LuisKey].RecognizeAsync(turnContext, cancellationToken);
-                var entities = recognizerResult.Entities;
-                var date = entities["datetime"];
-                var instance = entities["$instance"];
-                var location = entities["Places_AbsoluteLocation"];
                 var intent = recognizerResult?.GetTopScoringIntent().intent;
-
-                // service TEST
-                EventParams testEventParams = new EventParams()
-                {
-                    City = "Ghent",
-                };
-                //List<Event> result = await EventService.GetEventsAsync(testEventParams);
 
                 // Generate a dialog context for our dialog set.
                 DialogContext dc = await findEventDialog._dialogSet.CreateContextAsync(turnContext, cancellationToken);
-
-                if (date != null)
-                {
-                    var text = instance["datetime"][0]["text"].ToString();
-                    try
-                    {
-                        DateTime d = ParseLuisTest.ParseDateEntitie(text);
-                        eventParams.Date = d.ToString();
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                }
-                if (location != null)
-                {
-                    string loc = location[0].ToString();
-                    eventParams.City = loc;
-                }
 
                 // Als er geen dialoog bezig is
                 if (dc.ActiveDialog is null)
@@ -84,6 +54,8 @@ namespace EventBot
                     switch (intent)
                     {
                         case "FindEventIntent":
+                            // Check if there are entities recognized (moet voor het begin van het dialog)
+                            eventParams = ParseLuis.GetEntities(recognizerResult);
                             // start new dialog
                             await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
                             break;
@@ -100,6 +72,7 @@ namespace EventBot
                             //await turnContext.SendActivityAsync("I Do not understand what you are trying to say...");
                             break;
                         case "ThankIntent":
+                            //string reply = GetReply("ThankReply"); // krijg een random reply uit een list met mogelijke antwoorden
                             await turnContext.SendActivityAsync("No Problem!");
                             break;
                     }
@@ -119,6 +92,28 @@ namespace EventBot
                         await turnContext.SendActivityAsync(
                             $"I am looking for events with genre {eventParams.Genre} not further than {eventParams.Radius}km from {eventParams.City} on {eventParams.Date.ToString()}",
                             cancellationToken: cancellationToken);
+
+                        var reply = turnContext.Activity.CreateReply();
+                        List<Event> events = await EventService.GetEventsAsync(eventParams);
+                        List<Attachment> attachments = new List<Attachment>();
+                        foreach (var eventObject in events)
+                        {
+                            HeroCard heroCard = new HeroCard();
+                            List<CardImage> cardImages = new List<CardImage>()
+                            {
+                                new CardImage() {
+                                    Url = eventObject.Images[0].Url
+                                }
+                            };
+                            heroCard.Images = cardImages;
+                            heroCard.Title = eventObject.Name;
+
+                            attachments.Add(heroCard.ToAttachment());
+                        }
+                        reply.Attachments = attachments;
+                        reply.AttachmentLayout = "carousel";
+
+                        await turnContext.SendActivityAsync(reply);
 
                         // object terug leegmaken
                         eventParams = new EventParams();

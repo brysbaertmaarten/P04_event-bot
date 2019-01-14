@@ -1,5 +1,6 @@
 ﻿using EventBot.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace EventBot
         private static string radius;
         private static string date;
 
-        public static string CreateUrl(EventParams eventParams)
+        private static string CreateUrl(EventParams eventParams)
         {
             string url = baseUrl;
             if (!string.IsNullOrWhiteSpace(eventParams.City))
@@ -40,8 +41,8 @@ namespace EventBot
             if (response.IsSuccessStatusCode)
             {
                 string content = await response.Content.ReadAsStringAsync();
-                string test = content;
-                result = JsonConvert.DeserializeObject<List<Event>>(content);
+                RootObject rootObject = JsonConvert.DeserializeObject<RootObject>(content);
+                result = rootObject.Embedded.Events;
             }
             return result;
         }

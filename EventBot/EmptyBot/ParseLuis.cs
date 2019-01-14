@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EventBot.Models;
 using Microsoft.Bot.Builder;
 using Microsoft.Recognizers.Text;
 using Microsoft.Recognizers.Text.DateTime;
@@ -10,8 +11,38 @@ using Newtonsoft.Json.Linq;
 
 namespace EventBot
 {
-    public class ParseLuisTest
+    public class ParseLuis
     {
+        // extract entities from recognizerResult
+        public static EventParams GetEntities(RecognizerResult recognizerResult)
+        {
+            var entities = recognizerResult.Entities;
+            var date = entities["datetime"];
+            var instance = entities["$instance"];
+            var location = entities["Places_AbsoluteLocation"];
+            EventParams eventParams = new EventParams();
+
+            if (date != null)
+            {
+                var text = instance["datetime"][0]["text"].ToString();
+                try
+                {
+                    DateTime d = ParseDateEntitie(text);
+                    eventParams.Date = d.ToString();
+                }
+                catch (Exception)
+                {
+
+                }
+            }
+            if (location != null)
+            {
+                string loc = location[0].ToString();
+                eventParams.City = loc;
+            }
+            return eventParams;
+        }
+
         public static DateTime ParseDateEntitie(string entitie)
         {
             var culture = Culture.English;
