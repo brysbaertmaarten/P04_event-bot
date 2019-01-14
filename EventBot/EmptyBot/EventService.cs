@@ -15,12 +15,6 @@ namespace EventBot
         private const string apiKey = "dyXmi09sDm4XGbrxHw14yCkA5E43Ok9R";
         private const string baseUrl = "https://app.ticketmaster.com/discovery/v2/events.json?";
 
-        private static string city;
-        private static string latLong;
-        private static string classification;
-        private static string radius;
-        private static string date;
-
         private static string CreateUrl(EventParams eventParams)
         {
             string url = baseUrl;
@@ -28,6 +22,24 @@ namespace EventBot
             {
                 url += $"&city={eventParams.City}";
             }
+            if (true)
+            {
+                url += $"&radius={eventParams.Radius}";
+            }
+            if (!string.IsNullOrWhiteSpace(eventParams.Genre) && eventParams.Genre.ToLower() != "none")
+            {
+                url += $"&classificationName={eventParams.Genre}";
+            }
+            if (!string.IsNullOrWhiteSpace(eventParams.Date))
+            {
+                string date = eventParams.Date;
+                DateTime d = Convert.ToDateTime(date);
+                date = d.ToString("yyyy-MM-ddTHH:mm:ss");
+
+                url += $"&localStartDateTime={date},*";
+            }
+
+            url += "&unit=km";
             url += $"&apikey={apiKey}";
             return url;
         }
@@ -42,9 +54,29 @@ namespace EventBot
             {
                 string content = await response.Content.ReadAsStringAsync();
                 RootObject rootObject = JsonConvert.DeserializeObject<RootObject>(content);
-                result = rootObject.Embedded.Events;
+                if (rootObject.Embedded != null)
+                {
+                    result = rootObject.Embedded.Events;
+                }
             }
             return result;
+        }
+
+        public static async Task<List<Segment>> GetSegmentsAsync(EventParams eventParams)
+        {
+            List<Segment> segments = new List<Segment>();
+            List<string> segmentStrings = new List<string>();
+            List<Event> events = await GetEventsAsync(eventParams);
+            foreach (var eventObject in events)
+            {
+                var segment = eventObject.Classifications[0].Segment;
+                if (!segmentStrings.Contains(segment.Name))
+                {
+                    segments.Add(segment);
+                    segmentStrings.Add(segment.Name);
+                }
+            }
+            return segments;
         }
     }
 }

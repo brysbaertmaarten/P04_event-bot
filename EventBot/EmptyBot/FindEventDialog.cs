@@ -62,7 +62,6 @@ namespace EventBot
             string date = EventBot.eventParams.Date;
             if (date != null)
             {
-                stepContext.Values["date"] = date;
                 return await stepContext.NextAsync();
             }
             else
@@ -88,11 +87,10 @@ namespace EventBot
             {
                 DateTimeResolution resolution = (stepContext.Result as IList<DateTimeResolution>).First();
                 string date = resolution.Value ?? resolution.Start;
-                stepContext.Values["date"] = date;
+                EventBot.eventParams.Date = date;
             }
             if (city != null)
             {
-                stepContext.Values["city"] = city;
                 return await stepContext.NextAsync();
             }
 
@@ -100,8 +98,8 @@ namespace EventBot
                 LocationPrompt,
                 new PromptOptions
                 {
-                    Prompt = MessageFactory.Text("Where must the event find place?"),
-                    RetryPrompt = MessageFactory.Text("Where?"),
+                    Prompt = MessageFactory.Text("Which city should the event take place?"),
+                    RetryPrompt = MessageFactory.Text("Give up a city please."),
                 },
                 cancellationToken);
         }
@@ -110,21 +108,16 @@ namespace EventBot
             WaterfallStepContext stepContext,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var city = stepContext.Result;
-            if (city != null)
+            if (stepContext.Result != null)
             {
-                stepContext.Values["city"] = city;
-            }
-            else
-            {
-                city = EventBot.eventParams.City;
+                EventBot.eventParams.City = stepContext.Result.ToString();
             }
 
             return await stepContext.PromptAsync(
                 RadiusPrompt,
                 new PromptOptions
                 {
-                    Prompt = MessageFactory.Text($"What's the maximum distance in Km from {city}?"),
+                    Prompt = MessageFactory.Text($"What's the maximum distance in Km from {EventBot.eventParams.City}?"),
                 },
                 cancellationToken);
         }
@@ -134,14 +127,9 @@ namespace EventBot
             CancellationToken cancellationToken = default(CancellationToken))
         {
             var radius = stepContext.Result;
-            stepContext.Values["radius"] = radius;
+            EventBot.eventParams.Radius = (float)radius;
 
-            List<string> genres = new List<string>()
-            {
-                "Theatre",
-                "Football",
-                "Music"
-            };
+            List<Segment> segments = await EventService.GetSegmentsAsync(EventBot.eventParams);
 
             var reply = stepContext.Context.Activity.CreateReply("Which genre of events are you  looking for?");
             List<CardAction> actions = new List<CardAction>()
@@ -149,9 +137,9 @@ namespace EventBot
                 new CardAction() { Title = "None", Type = ActionTypes.ImBack, Value = "None" }
             };
 
-            foreach (var genre in genres)
+            foreach (var segment in segments)
             {
-                actions.Add(new CardAction() { Title = genre, Type = ActionTypes.ImBack, Value = genre });
+                actions.Add(new CardAction() { Title = segment.Name, Type = ActionTypes.ImBack, Value = segment.Name });
             }
             reply.SuggestedActions = new SuggestedActions() { Actions = actions };
 
@@ -170,18 +158,18 @@ namespace EventBot
             CancellationToken cancellationToken = default(CancellationToken))
         {
             var genre = stepContext.Result;
-            stepContext.Values["genre"] = genre;
+            EventBot.eventParams.Genre = (string)genre;
 
-            EventParams eventParams = new EventParams
-            {
-                Date = (string)stepContext.Values["date"],
-                Radius = (float)stepContext.Values["radius"],
-                Genre = genre.ToString(),
-                City = (string)stepContext.Values["city"],
-            };
+            //EventParams eventParams = new EventParams
+            //{
+            //    Date = (string)stepContext.Values["date"],
+            //    Radius = (float)stepContext.Values["radius"],
+            //    Genre = genre.ToString(),
+            //    City = (string)stepContext.Values["city"],
+            //};
 
             // Return the collected information to the parent context.
-            return await stepContext.EndDialogAsync(eventParams, cancellationToken);
+            return await stepContext.EndDialogAsync(cancellationToken);
         }
 
         private async Task<bool> DateValidatorAsync(

@@ -82,40 +82,48 @@ namespace EventBot
                     // Continue the dialog.
                     DialogTurnResult dialogTurnResult = await dc.ContinueDialogAsync(cancellationToken);
 
-                    // If the dialog completed this turn, record the reservation info.
+                    // If the dialog completed this turn, doe iets met de eventParams
                     if (dialogTurnResult.Status is DialogTurnStatus.Complete)
                     {
                         // opgegeven waarden wegschrijven naar eventParam
-                        eventParams = (EventParams)dialogTurnResult.Result;
+                        //eventParams = (EventParams)dialogTurnResult.Result;
 
                         // Send a confirmation message to the user (iets doen met de data)
-                        await turnContext.SendActivityAsync(
-                            $"I am looking for events with genre {eventParams.Genre} not further than {eventParams.Radius}km from {eventParams.City} on {eventParams.Date.ToString()}",
-                            cancellationToken: cancellationToken);
-
-                        var reply = turnContext.Activity.CreateReply();
+                        //await turnContext.SendActivityAsync(
+                        //    $"I am looking for events with genre {eventParams.Genre} not further than {eventParams.Radius}km from {eventParams.City} on {eventParams.Date.ToString()}",
+                        //    cancellationToken: cancellationToken);
                         List<Event> events = await EventService.GetEventsAsync(eventParams);
-                        List<Attachment> attachments = new List<Attachment>();
-                        foreach (var eventObject in events)
+                        var reply = turnContext.Activity.CreateReply();
+
+                        if (events.Count() != 0)
                         {
-                            HeroCard heroCard = new HeroCard();
-                            List<CardImage> cardImages = new List<CardImage>()
+                            List<Attachment> attachments = new List<Attachment>();
+                            foreach (var eventObject in events)
                             {
-                                new CardImage() {
-                                    Url = eventObject.Images[0].Url
-                                }
-                            };
-                            heroCard.Images = cardImages;
-                            heroCard.Title = eventObject.Name;
-
-                            attachments.Add(heroCard.ToAttachment());
+                                HeroCard heroCard = new HeroCard();
+                                List<CardImage> cardImages = new List<CardImage>()
+                                {
+                                    new CardImage() {
+                                        Url = eventObject.Images[0].Url
+                                    }
+                                };
+                                heroCard.Images = cardImages;
+                                heroCard.Title = eventObject.Name;
+                                attachments.Add(heroCard.ToAttachment());
+                            }
+                            reply.Text = $"This is what I found for events with genre {eventParams.Genre} not further than {eventParams.Radius}km from {eventParams.City} on {eventParams.Date.ToString()}:";
+                            reply.Attachments = attachments;
+                            reply.AttachmentLayout = "carousel";
                         }
-                        reply.Attachments = attachments;
-                        reply.AttachmentLayout = "carousel";
+                        else
+                        {
+                            reply.Text = $"I didn't find anything for events with genre {eventParams.Genre} not further than {eventParams.Radius}km from {eventParams.City} on {eventParams.Date.ToString()}.";
+                        }
 
+                        // send reply
                         await turnContext.SendActivityAsync(reply);
 
-                        // object terug leegmaken
+                        // eventParams resetten
                         eventParams = new EventParams();
                     }
                 }
