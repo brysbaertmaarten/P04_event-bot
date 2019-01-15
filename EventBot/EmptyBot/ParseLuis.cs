@@ -20,6 +20,7 @@ namespace EventBot
             var date = entities["datetime"];
             var instance = entities["$instance"];
             var location = entities["Places_AbsoluteLocation"];
+            var city = entities["geographyV2_city"];
             EventParams eventParams = new EventParams();
 
             if (date != null)
@@ -39,6 +40,10 @@ namespace EventBot
             {
                 string loc = location[0].ToString();
                 eventParams.City = loc;
+            }
+            if (city != null)
+            {
+                eventParams.City = city[0].ToString();
             }
             return eventParams;
         }

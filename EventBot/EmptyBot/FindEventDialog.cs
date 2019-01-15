@@ -41,7 +41,7 @@ namespace EventBot
             _dialogSet.Add(new TextPrompt(GenrePrompt));
             _dialogSet.Add(new TextPrompt(LocationPrompt));
             _dialogSet.Add(new NumberPrompt<float>(RadiusPrompt));
-            _dialogSet.Add(new DateTimePrompt(EventDatePrompt, DateValidatorAsync));
+            _dialogSet.Add(new DateTimePrompt(EventDatePrompt));
 
             // Define the steps of the waterfall dialog and add it to the set.
             WaterfallStep[] steps = new WaterfallStep[]
@@ -70,7 +70,7 @@ namespace EventBot
                    EventDatePrompt,
                    new PromptOptions
                    {
-                       Prompt = MessageFactory.Text("When must the event find place?"),
+                       Prompt = MessageFactory.Text("When must the event take place?"),
                        RetryPrompt = MessageFactory.Text("Please enter a valid time description."),
                    },
                    cancellationToken
@@ -98,7 +98,7 @@ namespace EventBot
                 LocationPrompt,
                 new PromptOptions
                 {
-                    Prompt = MessageFactory.Text("Which city should the event take place?"),
+                    Prompt = MessageFactory.Text("Which city should the event take place at?"),
                     RetryPrompt = MessageFactory.Text("Give up a city please."),
                 },
                 cancellationToken);
@@ -112,12 +112,13 @@ namespace EventBot
             {
                 EventBot.eventParams.City = stepContext.Result.ToString();
             }
+            return await stepContext.NextAsync(); // tijdelijk (radius alleen opvragen bij gebruik locatie vd gebruiker)
 
             return await stepContext.PromptAsync(
                 RadiusPrompt,
                 new PromptOptions
                 {
-                    Prompt = MessageFactory.Text($"What's the maximum distance in Km from {EventBot.eventParams.City}?"),
+                    Prompt = MessageFactory.Text($"What's the maximum distance in Km from your location?"),
                 },
                 cancellationToken);
         }
@@ -126,22 +127,25 @@ namespace EventBot
             WaterfallStepContext stepContext,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var radius = stepContext.Result;
-            EventBot.eventParams.Radius = (float)radius;
-
-            List<Segment> segments = await EventService.GetSegmentsAsync(EventBot.eventParams);
-
-            var reply = stepContext.Context.Activity.CreateReply("Which genre of events are you  looking for?");
-            List<CardAction> actions = new List<CardAction>()
+            if (EventBot.eventParams.Genre != null)
             {
-                new CardAction() { Title = "None", Type = ActionTypes.ImBack, Value = "None" }
-            };
-
-            foreach (var segment in segments)
-            {
-                actions.Add(new CardAction() { Title = segment.Name, Type = ActionTypes.ImBack, Value = segment.Name });
+                return await stepContext.NextAsync();
             }
-            reply.SuggestedActions = new SuggestedActions() { Actions = actions };
+            if (stepContext.Result != null)
+            {
+                EventBot.eventParams.Radius = (float)stepContext.Result;
+            }
+
+            // vraag segmenten (=genres) op, op basis van ingegeven parameters
+            List<Segment> segments = await EventService.GetSegmentsAsync(EventBot.eventParams);
+            // indien geen segmenten (=genres), er zijn geen evenementen gevonden voor deze parameters.
+            if (segments.Count == 0)
+            {
+                return await stepContext.EndDialogAsync(cancellationToken);
+            }
+
+            var reply = stepContext.Context.Activity.CreateReply("Which genre of events are you looking for?");
+            reply.SuggestedActions = CreateActivity.GetSuggestedActionsForGenres(segments);
 
             return await stepContext.PromptAsync(
                 GenrePrompt,
@@ -157,18 +161,11 @@ namespace EventBot
             WaterfallStepContext stepContext,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var genre = stepContext.Result;
-            EventBot.eventParams.Genre = (string)genre;
+            if (stepContext.Result != null)
+            {
+                EventBot.eventParams.Genre = (string)stepContext.Result;
+            }
 
-            //EventParams eventParams = new EventParams
-            //{
-            //    Date = (string)stepContext.Values["date"],
-            //    Radius = (float)stepContext.Values["radius"],
-            //    Genre = genre.ToString(),
-            //    City = (string)stepContext.Values["city"],
-            //};
-
-            // Return the collected information to the parent context.
             return await stepContext.EndDialogAsync(cancellationToken);
         }
 
@@ -176,7 +173,6 @@ namespace EventBot
             PromptValidatorContext<IList<DateTimeResolution>> promptContext,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-
             if (!promptContext.Recognized.Succeeded)
             {
                 await promptContext.Context.SendActivityAsync(

@@ -1,0 +1,13 @@
+C:\repos3\P04_event-bot\EventBot\EmptyBot\bin\Release\netcoreapp2.1\EventBot.bot
+C:\repos3\P04_event-bot\EventBot\EmptyBot\bin\Release\netcoreapp2.1\EventBot.deps.json
+C:\repos3\P04_event-bot\EventBot\EmptyBot\bin\Release\netcoreapp2.1\EventBot.runtimeconfig.json
+C:\repos3\P04_event-bot\EventBot\EmptyBot\bin\Release\netcoreapp2.1\EventBot.runtimeconfig.dev.json
+C:\repos3\P04_event-bot\EventBot\EmptyBot\bin\Release\netcoreapp2.1\EventBot.dll
+C:\repos3\P04_event-bot\EventBot\EmptyBot\bin\Release\netcoreapp2.1\EventBot.pdb
+C:\repos3\P04_event-bot\EventBot\EmptyBot\obj\Release\netcoreapp2.1\EventBot.csprojAssemblyReference.cache
+C:\repos3\P04_event-bot\EventBot\EmptyBot\obj\Release\netcoreapp2.1\EventBot.csproj.CoreCompileInputs.cache
+C:\repos3\P04_event-bot\EventBot\EmptyBot\obj\Release\netcoreapp2.1\UserSecretsAssemblyInfo.cs
+C:\repos3\P04_event-bot\EventBot\EmptyBot\obj\Release\netcoreapp2.1\EventBot.AssemblyInfoInputs.cache
+C:\repos3\P04_event-bot\EventBot\EmptyBot\obj\Release\netcoreapp2.1\EventBot.AssemblyInfo.cs
+C:\repos3\P04_event-bot\EventBot\EmptyBot\obj\Release\netcoreapp2.1\EventBot.dll
+C:\repos3\P04_event-bot\EventBot\EmptyBot\obj\Release\netcoreapp2.1\EventBot.pdb

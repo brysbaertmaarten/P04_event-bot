@@ -1,0 +1,5 @@
+C:\repos3\P04_event-bot\EventBot\EmptyBot
+--output-path=obj\Release\netcoreapp2.1\
+--application-name=EventBot
+--content-root=C:\repos3\P04_event-bot\EventBot\EmptyBot
+--file=

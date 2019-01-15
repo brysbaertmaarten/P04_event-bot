@@ -26,6 +26,8 @@ namespace EventBot
 
         public static EventParams eventParams = new EventParams();
 
+        DialogTurnResult dialogTurnResult = new DialogTurnResult(DialogTurnStatus.Empty);
+
         public EventBot(EventBotAccessors accessors, FindEventDialog findEventDialog, BotServices services)
         {
             this.accessors = accessors;
@@ -56,76 +58,68 @@ namespace EventBot
                         case "FindEventIntent":
                             // Check if there are entities recognized (moet voor het begin van het dialog)
                             eventParams = ParseLuis.GetEntities(recognizerResult);
-                            // start new dialog
-                            await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
+                            // start new dialog 
+                            dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
                             break;
                         case "GreetingIntent":
-                            var reply = turnContext.Activity.CreateReply("Hi there! I can help you find events.");
-                            List<CardAction> actions = new List<CardAction>()
-                            {
-                                new CardAction() { Title = "Find me an event!", Type = ActionTypes.ImBack, Value = "Find me an event!" }
-                            };
-                            reply.SuggestedActions = new SuggestedActions() { Actions = actions };
-                            await turnContext.SendActivityAsync(reply);
-                            break;
-                        case "None":
-                            //await turnContext.SendActivityAsync("I Do not understand what you are trying to say...");
+                            var greetingReply = turnContext.Activity.CreateReply();
+                            greetingReply.Text = MessageService.GetMessage("GreetingAnswer"); // geeft een random antwoord van de greetingAnswer list terug
+                            greetingReply.SuggestedActions = CreateActivity.GetSuggestedActionsForFindEvent();
+                            await turnContext.SendActivityAsync(greetingReply);
                             break;
                         case "ThankIntent":
-                            //string reply = GetReply("ThankReply"); // krijg een random reply uit een list met mogelijke antwoorden
-                            await turnContext.SendActivityAsync("No Problem!");
+                            string thankReply = MessageService.GetMessage("ThankAnswer");
+                            await turnContext.SendActivityAsync(thankReply);
+                            break;
+                        case "ChangeDateIntent":
+                            eventParams.Date = null;
+                            dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
+                            break;
+                        case "ChangeCityIntent":
+                            eventParams.City = ParseLuis.GetEntities(recognizerResult).City;
+                            dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
+                            break;
+                        case "ChangeGenreIntent":
+                            eventParams.Genre = null;
+                            dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
+                            break;
+                        case "None":
                             break;
                     }
                 }
                 else
                 {
                     // Continue the dialog.
-                    DialogTurnResult dialogTurnResult = await dc.ContinueDialogAsync(cancellationToken);
-
-                    // If the dialog completed this turn, doe iets met de eventParams
-                    if (dialogTurnResult.Status is DialogTurnStatus.Complete)
+                    switch (intent)
                     {
-                        // opgegeven waarden wegschrijven naar eventParam
-                        //eventParams = (EventParams)dialogTurnResult.Result;
-
-                        // Send a confirmation message to the user (iets doen met de data)
-                        //await turnContext.SendActivityAsync(
-                        //    $"I am looking for events with genre {eventParams.Genre} not further than {eventParams.Radius}km from {eventParams.City} on {eventParams.Date.ToString()}",
-                        //    cancellationToken: cancellationToken);
-                        List<Event> events = await EventService.GetEventsAsync(eventParams);
-                        var reply = turnContext.Activity.CreateReply();
-
-                        if (events.Count() != 0)
-                        {
-                            List<Attachment> attachments = new List<Attachment>();
-                            foreach (var eventObject in events)
-                            {
-                                HeroCard heroCard = new HeroCard();
-                                List<CardImage> cardImages = new List<CardImage>()
-                                {
-                                    new CardImage() {
-                                        Url = eventObject.Images[0].Url
-                                    }
-                                };
-                                heroCard.Images = cardImages;
-                                heroCard.Title = eventObject.Name;
-                                attachments.Add(heroCard.ToAttachment());
-                            }
-                            reply.Text = $"This is what I found for events with genre {eventParams.Genre} not further than {eventParams.Radius}km from {eventParams.City} on {eventParams.Date.ToString()}:";
-                            reply.Attachments = attachments;
-                            reply.AttachmentLayout = "carousel";
-                        }
-                        else
-                        {
-                            reply.Text = $"I didn't find anything for events with genre {eventParams.Genre} not further than {eventParams.Radius}km from {eventParams.City} on {eventParams.Date.ToString()}.";
-                        }
-
-                        // send reply
-                        await turnContext.SendActivityAsync(reply);
-
-                        // eventParams resetten
-                        eventParams = new EventParams();
+                        case "QuitIntent":
+                            dialogTurnResult = await dc.CancelAllDialogsAsync(cancellationToken);
+                            break;
+                        default:
+                            dialogTurnResult = await dc.ContinueDialogAsync(cancellationToken);
+                            break;
                     }
+                }
+
+                // If the dialog completed this turn, doe iets met de eventParams
+                if (dialogTurnResult.Status is DialogTurnStatus.Complete)
+                {
+                    List<Event> events = await EventService.GetEventsAsync(eventParams);
+                    var reply = turnContext.Activity.CreateReply();
+
+                    if (events.Count() != 0)
+                    {
+                        reply.Text = CreateActivity.GetTextForFoundEvents(eventParams);
+                        reply.Attachments = CreateActivity.GetAttachementForFoundEvents(events);
+                        reply.AttachmentLayout = "carousel";
+                    }
+                    else
+                    {
+                        reply.Text = CreateActivity.GetTextForNoEventsFound(eventParams);
+                    }
+
+                    // send reply
+                    await turnContext.SendActivityAsync(reply);
                 }
 
                 // Save the updated dialog state into the conversation state.
