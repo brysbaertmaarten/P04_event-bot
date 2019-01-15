@@ -1,0 +1,14 @@
+{
+  "GreetingAnswer": [
+    "Hello! I can help you find events!",
+    "Howdy, let me help you find an event!",
+    "Hi there! I'll help you find events!",
+    "Hi!"
+  ],
+  "ThankAnswer": [
+    "No problem!",
+    "That's what I'm here for :)",
+    "I should thank you, I was starting to get bored... :p",
+    "You're welcome!"
+  ]
+}
