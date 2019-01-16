@@ -25,6 +25,8 @@ namespace EventBot.Models
                 public List<Image> Images { get; set; }
                 [JsonProperty(propertyName: "classifications")]
                 public List<Classification> Classifications { get; set; }
+                [JsonProperty(propertyName: "dates")]
+                public Dates Dates { get; set; }
             }
                 public class Image
                 {
@@ -35,6 +37,17 @@ namespace EventBot.Models
                     [JsonProperty(propertyName: "height")]
                     public int Height { get; set; }
                 }
+
+                public class Dates
+                {
+                    [JsonProperty(propertyName: "start")]
+                    public Start Start { get; set; }
+                }
+                    public class Start
+                    {
+                        [JsonProperty(propertyName: "dateTime")]
+                        public DateTime DateTime { get; set; }
+                    }
 
                 public class Classification
                 {

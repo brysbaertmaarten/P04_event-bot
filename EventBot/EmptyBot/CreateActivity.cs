@@ -47,6 +47,7 @@ namespace EventBot
                 };
                 heroCard.Images = cardImages;
                 heroCard.Title = eventObject.Name;
+                heroCard.Subtitle = eventObject.Dates.Start.DateTime.ToString();
                 attachments.Add(heroCard.ToAttachment());
             }
             return attachments;
@@ -71,12 +72,13 @@ namespace EventBot
             return suggestedActions;
         }
 
-        public static SuggestedActions GetSuggestedActionsForFindEvent()
+        public static SuggestedActions CreateSuggestedAction(List<string> values)
         {
-            List<CardAction> actions = new List<CardAction>()
+            List<CardAction> actions = new List<CardAction>();
+            foreach (var value in values)
             {
-                new CardAction() { Title = "Find me an event!", Type = ActionTypes.ImBack, Value = "Find me an event!" }
-            };
+                actions.Add(new CardAction() { Title = value, Type = ActionTypes.ImBack, Value = value });
+            }
             SuggestedActions suggestedAction = new SuggestedActions() { Actions = actions };
             return suggestedAction;
         }

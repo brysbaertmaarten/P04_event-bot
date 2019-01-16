@@ -25,6 +25,7 @@ namespace EventBot
         private readonly BotServices services;
 
         public static EventParams eventParams = new EventParams();
+        public static int pageCount = 0;
 
         DialogTurnResult dialogTurnResult = new DialogTurnResult(DialogTurnStatus.Empty);
 
@@ -45,6 +46,7 @@ namespace EventBot
             {
                 // input doorsturen naar LUIS API
                 var recognizerResult = await services.LuisServices[LuisKey].RecognizeAsync(turnContext, cancellationToken);
+                //var recognizerResult = await services.LuisServices[LuisKey].RecognizeAsync(turnContext, cancellationToken);
                 var intent = recognizerResult?.GetTopScoringIntent().intent;
 
                 // Generate a dialog context for our dialog set.
@@ -57,14 +59,14 @@ namespace EventBot
                     {
                         case "FindEventIntent":
                             // Check if there are entities recognized (moet voor het begin van het dialog)
-                            eventParams = ParseLuis.GetEntities(recognizerResult);
+                            eventParams = ParseLuis.GetEntities(recognizerResult); pageCount = 0;
                             // start new dialog 
                             dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
                             break;
                         case "GreetingIntent":
                             var greetingReply = turnContext.Activity.CreateReply();
                             greetingReply.Text = MessageService.GetMessage("GreetingAnswer"); // geeft een random antwoord van de greetingAnswer list terug
-                            greetingReply.SuggestedActions = CreateActivity.GetSuggestedActionsForFindEvent();
+                            greetingReply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "Find me an event!" });
                             await turnContext.SendActivityAsync(greetingReply);
                             break;
                         case "ThankIntent":
@@ -72,7 +74,7 @@ namespace EventBot
                             await turnContext.SendActivityAsync(thankReply);
                             break;
                         case "ChangeDateIntent":
-                            eventParams.Date = null;
+                            eventParams.Date = null; pageCount = 0;
                             dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
                             break;
                         case "ChangeCityIntent":
@@ -80,7 +82,11 @@ namespace EventBot
                             dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
                             break;
                         case "ChangeGenreIntent":
-                            eventParams.Genre = null;
+                            eventParams.Genre = null; pageCount = 0;
+                            dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
+                            break;
+                        case "MoreEventsIntent":
+                            pageCount += 1;
                             dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
                             break;
                         case "None":
@@ -104,7 +110,7 @@ namespace EventBot
                 // If the dialog completed this turn, doe iets met de eventParams
                 if (dialogTurnResult.Status is DialogTurnStatus.Complete)
                 {
-                    List<Event> events = await EventService.GetEventsAsync(eventParams);
+                    List<Event> events = await EventService.GetEventsAsync(eventParams, pageCount);
                     var reply = turnContext.Activity.CreateReply();
 
                     if (events.Count() != 0)
@@ -112,10 +118,19 @@ namespace EventBot
                         reply.Text = CreateActivity.GetTextForFoundEvents(eventParams);
                         reply.Attachments = CreateActivity.GetAttachementForFoundEvents(events);
                         reply.AttachmentLayout = "carousel";
+                        reply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "more", "change genre", "change city" });
                     }
                     else
                     {
                         reply.Text = CreateActivity.GetTextForNoEventsFound(eventParams);
+                        if (eventParams.Genre == null)
+                        {
+                            reply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "change city" });
+                        }
+                        else
+                        {
+                            reply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "change genre", "change city" });
+                        }
                     }
 
                     // send reply

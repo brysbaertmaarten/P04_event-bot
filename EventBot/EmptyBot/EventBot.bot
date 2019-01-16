@@ -20,12 +20,12 @@
     {
       "type": "luis",
       "name": "EventBot",
-      "verbose":  true,
+      "verbose": true,
       "appId": "436a54ca-76d6-489a-9eaf-8423eb54ffb2",
       "version": "0.1",
-      "authoringKey": "6fc73b0da1984ae09bf3ee2dd8ac5ae0",
-      "subscriptionKey": "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/436a54ca-76d6-489a-9eaf-8423eb54ffb2?verbose=true&timezoneOffset=-360&subscription-key=6fc73b0da1984ae09bf3ee2dd8ac5ae0&q=",
-      "region": "westus",
+      "authoringKey": "87f4a52042f74c52986610c267affc1e",
+      "subscriptionKey": "https://centralus.api.cognitive.microsoft.com/luis/v2.0/apps/436a54ca-76d6-489a-9eaf-8423eb54ffb2?verbose=true&timezoneOffset=-360&subscription-key=87f4a52042f74c52986610c267affc1e&q=",
+      "region": "centralus",
       "id": "158"
     }
   ],

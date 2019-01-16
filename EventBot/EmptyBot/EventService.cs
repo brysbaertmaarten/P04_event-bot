@@ -15,7 +15,7 @@ namespace EventBot
         private const string apiKey = "dyXmi09sDm4XGbrxHw14yCkA5E43Ok9R";
         private const string baseUrl = "https://app.ticketmaster.com/discovery/v2/events.json?";
 
-        private static string CreateUrl(EventParams eventParams)
+        private static string CreateUrl(EventParams eventParams, int page)
         {
             string url = baseUrl;
             if (!string.IsNullOrWhiteSpace(eventParams.City))
@@ -39,14 +39,16 @@ namespace EventBot
                 url += $"&localStartDateTime={date},*";
             }
 
+            url += $"&page={page}";
+            url += "&size=10";
             url += "&unit=km";
             url += $"&apikey={apiKey}";
             return url;
         }
 
-        public static async Task<List<Event>> GetEventsAsync(EventParams eventParams)
+        public static async Task<List<Event>> GetEventsAsync(EventParams eventParams, int page)
         {
-            string url = CreateUrl(eventParams);
+            string url = CreateUrl(eventParams, page);
             List<Event> result = new List<Event>();
 
             HttpResponseMessage response = await client.GetAsync(url);
@@ -64,17 +66,22 @@ namespace EventBot
 
         public static async Task<List<Segment>> GetSegmentsAsync(EventParams eventParams)
         {
+            int page = 0;
             List<Segment> segments = new List<Segment>();
             List<string> segmentStrings = new List<string>();
-            List<Event> events = await GetEventsAsync(eventParams);
-            foreach (var eventObject in events)
+            while (page < 5)
             {
-                var segment = eventObject.Classifications[0].Segment;
-                if (!segmentStrings.Contains(segment.Name))
+                List<Event> events = await GetEventsAsync(eventParams, page);
+                foreach (var eventObject in events)
                 {
-                    segments.Add(segment);
-                    segmentStrings.Add(segment.Name);
+                    var segment = eventObject.Classifications[0].Segment;
+                    if (!segmentStrings.Contains(segment.Name))
+                    {
+                        segments.Add(segment);
+                        segmentStrings.Add(segment.Name);
+                    }
                 }
+                page += 1;
             }
             return segments;
         }
