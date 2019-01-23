@@ -25,23 +25,23 @@ namespace EventBot
         public static readonly string LuisKey = "EventBot";
 
         private readonly EventBotAccessors accessors;
-        private readonly FindEventDialog findEventDialog;
+        private FindEventDialog FindEventDialog { get; }
         private readonly BotServices services;
         private readonly EventService eventService;
         public static int pageCount = 0;
 
         DialogTurnResult dialogTurnResult = new DialogTurnResult(DialogTurnStatus.Empty);
 
-        public EventBot(EventBotAccessors accessors, FindEventDialog findEventDialog, BotServices services, EventService eventService)
+        public EventBot(EventBotAccessors accessors, BotServices services, EventService eventService)
         {
             this.accessors = accessors;
-            this.findEventDialog = findEventDialog;
             this.services = services ?? throw new System.ArgumentNullException(nameof(services));
             this.eventService = eventService;
             if (!services.LuisServices.ContainsKey(LuisKey))
             {
                 throw new System.ArgumentException($"Invalid configuration....");
             }
+            FindEventDialog = new FindEventDialog(accessors, eventService, services);
         }
 
         public async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default(CancellationToken))
@@ -60,7 +60,7 @@ namespace EventBot
                 }
 
                 // Generate a dialog context for our dialog set.
-                DialogContext dc = await findEventDialog._dialogSet.CreateContextAsync(turnContext, cancellationToken);
+                DialogContext dc = await FindEventDialog.CreateContextAsync(turnContext); 
 
                 // eventParams ophalen uit store
                 EventParams eventParams = await accessors.EventParamState.GetAsync(turnContext, () => null, cancellationToken);
@@ -136,8 +136,8 @@ namespace EventBot
                                 case "TellJokeIntent":
                                     reply.Text = MessageService.GetMessage("TellJokeAnswer");
                                     await turnContext.SendActivityAsync(reply);
-                                    //reply.Text = await JokeService.GetJoke();
-                                    reply.Text = "How does a computer get drunk? It takes screenshots.";
+                                    reply.Text = await JokeService.GetJoke();
+                                    //reply.Text = "How does a computer get drunk? It takes screenshots.";
                                     await turnContext.SendActivityAsync(reply);
                                     break;
                                 case "None":
@@ -169,7 +169,6 @@ namespace EventBot
                             dialogTurnResult = await dc.CancelAllDialogsAsync(cancellationToken);
                             break;
                         default:
-                            //var test = dc.ActiveDialog.State.Values.First(). = null;
                             dialogTurnResult = await dc.ContinueDialogAsync(cancellationToken);
                             break;
                     }
@@ -216,21 +215,31 @@ namespace EventBot
                     await turnContext.SendActivityAsync(reply);
                 }
             }
-            else if (turnContext.Activity.Type == ActivityTypes.ConversationUpdate)
+
+            // als de gebruiker via fb chat, sla dan een aantal gegevens op
+            if (turnContext.Activity.ChannelId == Microsoft.Bot.Connector.Channels.Facebook)
             {
-                bool DidWelcome = await accessors.DidWelcomeState.GetAsync(turnContext, () => false, cancellationToken);
-                if (!DidWelcome)
+                dynamic jsonObject = JsonConvert.DeserializeObject(turnContext.Activity.ChannelData.ToString());
+                string userId = jsonObject["sender"]["id"];
+                // userProfile ophalen van db
+                UserProfile userProfile = await accessors.UserProfileState.GetAsync(turnContext, () => null, cancellationToken);
+                if (userProfile == null)
                 {
-                    //var greetingReply = turnContext.Activity.CreateReply();
-                    //greetingReply.Text = MessageService.GetMessage("GreetingAnswer"); // geeft een random antwoord van de greetingAnswer list terug
-                    //greetingReply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "Find me an event!" });
-                    //await turnContext.SendActivityAsync(greetingReply);
-                    //await accessors.DidWelcomeState.SetAsync(turnContext, true);
+                    userProfile = new UserProfile();
                 }
+                userProfile.Id = userId;
+                userProfile.ChannelId = turnContext.Activity.ChannelId;
+                await accessors.UserProfileState.SetAsync(turnContext, userProfile);
+
+                //var getStartedReply = turnContext.Activity.CreateReply();
+                //getStartedReply.ChannelData = JObject.FromObject(new { get_started = new { payload = "test" } });
+                //await turnContext.SendActivityAsync(getStartedReply);
             }
 
-            // Save the updated dialog state into the conversation state.
+            // Save the updated dialogState into the conversation state.
             await accessors.ConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
+            // Save the updated userProfileState into the user state. (Azure CosmoDB)
+            await accessors.UserState.SaveChangesAsync(turnContext, false, cancellationToken);
         }
     }
 }

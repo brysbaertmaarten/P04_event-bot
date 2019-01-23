@@ -10,19 +10,23 @@ namespace EventBot
 {
     public class EventBotAccessors
     {
-        public EventBotAccessors(ConversationState conversationState)
+        public EventBotAccessors(ConversationState conversationState, UserState userState)
         {
             ConversationState = conversationState ?? throw new ArgumentNullException(nameof(conversationState));
+            UserState = userState ?? throw new ArgumentNullException(nameof(userState));
         }
 
+        // conversationState
         public static string DialogStateAccessorKey { get; } = "EventBotAccessors.DialogState";
         public static string EventParamStateAccessorKey { get; } = "EventBotAccessors.EventParamState";
-        public static string DidWelcomeStateAccessorKey { get; } = "EventBotAccessors.DidWelcomeState";
-
         public IStatePropertyAccessor<DialogState> DialogState { get; set; }
         public IStatePropertyAccessor<EventParams> EventParamState { get; set; }
-        public IStatePropertyAccessor<bool> DidWelcomeState { get; set; }
 
+        // userState
+        public static string UserProfileName { get; } = "UserProfile";
+        public IStatePropertyAccessor<UserProfile> UserProfileState { get; set; }
+        
         public ConversationState ConversationState { get; }
+        public UserState UserState { get; }
     }
 }

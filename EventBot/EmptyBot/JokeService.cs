@@ -11,8 +11,8 @@ namespace EventBot
     public class JokeService
     {
         static HttpClient client = new HttpClient();
-        private const string XMashapeKey = "iV1jeW0Ls1mshZd4Vdxn6axLeeCOp1arzd8jsng2EKayNqE4Zi";
-        private const string baseUrl = "https://webknox-jokes.p.mashape.com/jokes/oneLiner";
+        //private const string XMashapeKey = "iV1jeW0Ls1mshZd4Vdxn6axLeeCOp1arzd8jsng2EKayNqE4Zi";
+        private const string baseUrl = "https://icanhazdadjoke.com/";
 
         public static async Task<string> GetJoke()
         {
@@ -22,7 +22,7 @@ namespace EventBot
                 Method = HttpMethod.Get,
                 RequestUri = new Uri(baseUrl),
                 Headers = {
-                    { "X-Mashape-Key", "iV1jeW0Ls1mshZd4Vdxn6axLeeCOp1arzd8jsng2EKayNqE4Zi" }
+                    { "Accept", "application/json" }
                 }
             };
             HttpResponseMessage response = await client.SendAsync(httpRequestMessage);
@@ -30,7 +30,7 @@ namespace EventBot
             {
                 string content = await response.Content.ReadAsStringAsync();
                 dynamic obj = JsonConvert.DeserializeObject<dynamic>(content);
-                result = obj["text"];
+                result = obj["joke"];
             }
             return result;
         }

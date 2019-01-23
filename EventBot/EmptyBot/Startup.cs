@@ -7,11 +7,13 @@ using EventBot.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Azure;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Integration;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Connector.Authentication;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -78,12 +80,12 @@ namespace EventBot
                 {
                     await context.SendActivityAsync("Sorry, it looks like something went wrong.");
                 };
-
-                // Add storage
-                IStorage dataStore = new MemoryStorage();
-                var conversationState = new ConversationState(dataStore);
-                options.State.Add(conversationState);
             });
+
+            // Add storage
+            IStorage dataStore = new MemoryStorage();
+            ConversationState conversationState = new ConversationState(dataStore);
+            //UserState userState = new UserState(dataStore);
 
             services.AddSingleton<FindEventDialog>();
             services.AddSingleton<EventService>();
@@ -96,19 +98,28 @@ namespace EventBot
                     throw new InvalidOperationException("BotFrameworkOptions must be configured prior to setting up the state accessors");
                 }
 
-                var conversationState = options.State.OfType<ConversationState>().FirstOrDefault();
-                if (conversationState == null)
-                {
-                    throw new InvalidOperationException("ConversationState must be defined and added before adding conversation-scoped state accessors.");
-                }
+                var cosmosSettings = Configuration.GetSection("CosmosDB");
+                IStorage storage = new CosmosDbStorage(
+                    new CosmosDbStorageOptions
+                    {
+                        DatabaseId = cosmosSettings["DatabaseID"],
+                        CollectionId = cosmosSettings["CollectionID"],
+                        CosmosDBEndpoint = new Uri(cosmosSettings["EndpointUri"]),
+                        AuthKey = cosmosSettings["AuthenticationKey"],
+                    });
+                options.State.Add(new ConversationState(storage));
+                options.State.Add(new UserState(storage));
+
+                //ConversationState conversationState = new ConversationState(storage);
+                UserState userState = new UserState(storage);
 
                 // Create the custom state accessor.
                 // State accessors enable other components to read and write individual properties of state.
-                var accessors = new EventBotAccessors(conversationState)
+                var accessors = new EventBotAccessors(conversationState, userState)
                 {
                     DialogState = conversationState.CreateProperty<DialogState>(EventBotAccessors.DialogStateAccessorKey),
                     EventParamState = conversationState.CreateProperty<EventParams>(EventBotAccessors.EventParamStateAccessorKey),
-                    DidWelcomeState = conversationState.CreateProperty<bool>(EventBotAccessors.DidWelcomeStateAccessorKey),
+                    UserProfileState = userState.CreateProperty<UserProfile>(EventBotAccessors.UserProfileName),
                 };
 
                 return accessors;

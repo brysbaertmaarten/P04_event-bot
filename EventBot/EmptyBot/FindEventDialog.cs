@@ -12,7 +12,7 @@ using static EventBot.Models.FacebookChannelData;
 
 namespace EventBot
 {
-    public class FindEventDialog
+    public class FindEventDialog : DialogSet
     {
         private const string Dialog = "findEventDialog";
         public static readonly string LuisKey = "EventBot";
@@ -22,32 +22,23 @@ namespace EventBot
         private const string EventDatePrompt = "datePrompt";
         private const string RadiusPrompt = "radiusPrompt";
 
-        public readonly DialogSet _dialogSet;
         private readonly EventBotAccessors _accessors;
         private readonly EventService eventService;
         private readonly BotServices services;
-        private readonly ILogger _logger;
 
         // The following code creates prompts and adds them to an existing dialog set. The DialogSet contains all the dialogs that can 
         // be used at runtime. The prompts also references a validation method is not shown here.
-        public FindEventDialog(EventBotAccessors accessors, ILoggerFactory loggerFactory, EventService eventService, BotServices services)
+        public FindEventDialog(EventBotAccessors accessors, EventService eventService, BotServices services) : base(accessors.DialogState)
         {
-            if (loggerFactory == null)
-            {
-                throw new System.ArgumentNullException(nameof(loggerFactory));
-            }
-
-            _logger = loggerFactory.CreateLogger<FindEventDialog>();
-            _accessors = accessors ?? throw new System.ArgumentNullException(nameof(accessors));
+            _accessors = accessors;
             this.eventService = eventService;
             this.services = services;
 
-            // Create the dialog set and add the prompts, including custom validation.
-            _dialogSet = new DialogSet(_accessors.DialogState);
-            _dialogSet.Add(new TextPrompt(GenrePrompt));
-            _dialogSet.Add(new TextPrompt(LocationPrompt));
-            _dialogSet.Add(new NumberPrompt<float>(RadiusPrompt));
-            _dialogSet.Add(new DateTimePrompt(EventDatePrompt));
+            // add prompts to dialog
+            Add(new TextPrompt(GenrePrompt));
+            Add(new TextPrompt(LocationPrompt));
+            Add(new NumberPrompt<float>(RadiusPrompt));
+            Add(new DateTimePrompt(EventDatePrompt));
 
             // Define the steps of the waterfall dialog and add it to the set.
             WaterfallStep[] steps = new WaterfallStep[]
@@ -58,7 +49,7 @@ namespace EventBot
                 PromptForGenreAsync,
                 ReturnEventsAsync,
             };
-            _dialogSet.Add(new WaterfallDialog(Dialog, steps));
+            Add(new WaterfallDialog(Dialog, steps));
 
         }
 
