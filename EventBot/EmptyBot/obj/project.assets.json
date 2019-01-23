@@ -2,6 +2,19 @@
   "version": 3,
   "targets": {
     ".NETCoreApp,Version=v2.1": {
+      "Autofac/4.1.1": {
+        "type": "package",
+        "dependencies": {
+          "NETStandard.Library": "1.6.0",
+          "System.ComponentModel": "4.0.1"
+        },
+        "compile": {
+          "lib/netstandard1.1/Autofac.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.1/Autofac.dll": {}
+        }
+      },
       "Libuv/1.10.0": {
         "type": "package",
         "dependencies": {
@@ -1580,6 +1593,21 @@
           "lib/netstandard2.0/Microsoft.Bot.Builder.Integration.AspNet.Core.dll": {}
         }
       },
+      "Microsoft.Bot.Builder.Location/2.1.0": {
+        "type": "package",
+        "dependencies": {
+          "Autofac": "4.1.1",
+          "Microsoft.Bot.Builder": "3.8.1",
+          "Microsoft.Rest.ClientRuntime": "2.3.3",
+          "Newtonsoft.Json": "9.0.1"
+        },
+        "compile": {
+          "lib/net46/Microsoft.Bot.Builder.Location.dll": {}
+        },
+        "runtime": {
+          "lib/net46/Microsoft.Bot.Builder.Location.dll": {}
+        }
+      },
       "Microsoft.Bot.Configuration/4.2.0": {
         "type": "package",
         "dependencies": {
@@ -2966,6 +2994,15 @@
           "lib/netstandard1.3/Newtonsoft.Json.Bson.dll": {}
         }
       },
+      "NGeoHash/1.2.0": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/NGeoHash.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/NGeoHash.dll": {}
+        }
+      },
       "Remotion.Linq/2.1.1": {
         "type": "package",
         "dependencies": {
@@ -3441,6 +3478,18 @@
         },
         "runtime": {
           "lib/netstandard1.3/System.Collections.Specialized.dll": {}
+        }
+      },
+      "System.ComponentModel/4.0.1": {
+        "type": "package",
+        "dependencies": {
+          "System.Runtime": "4.1.0"
+        },
+        "compile": {
+          "ref/netstandard1.0/System.ComponentModel.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.3/System.ComponentModel.dll": {}
         }
       },
       "System.ComponentModel.Annotations/4.4.0": {
@@ -4946,6 +4995,21 @@
     }
   },
   "libraries": {
+    "Autofac/4.1.1": {
+      "sha512": "WnKEFFGluvXFzjSi+9XmbJy7A89tmrnMYY6oGCFr7YD1+AA+T736YZEFShifD1glm+ka/ManKfp60J5aY6WJ9A==",
+      "type": "package",
+      "path": "autofac/4.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "autofac.4.1.1.nupkg.sha512",
+        "autofac.nuspec",
+        "lib/net45/Autofac.dll",
+        "lib/net45/Autofac.xml",
+        "lib/netstandard1.1/Autofac.dll",
+        "lib/netstandard1.1/Autofac.xml"
+      ]
+    },
     "Libuv/1.10.0": {
       "sha512": "zisTbxitzki256+rKY0myI2T1yLyO9+qAU8P+FXkd8Dv0Iymk484Y9SbwUlyL3igF/bpiCv7SCdv349rN/JbfQ==",
       "type": "package",
@@ -6275,6 +6339,18 @@
         "lib/netstandard2.0/Microsoft.Bot.Builder.Integration.AspNet.Core.xml",
         "microsoft.bot.builder.integration.aspnet.core.4.2.0.nupkg.sha512",
         "microsoft.bot.builder.integration.aspnet.core.nuspec"
+      ]
+    },
+    "Microsoft.Bot.Builder.Location/2.1.0": {
+      "sha512": "CZfmn78BhpUAMMgP/tjiliNl2XlCL2aktYk1/I8U4AYFHEr80jMHgHLy7hHL3pv/VQRSfU/qmK1TVvJ9qGfKRg==",
+      "type": "package",
+      "path": "microsoft.bot.builder.location/2.1.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net46/Microsoft.Bot.Builder.Location.dll",
+        "microsoft.bot.builder.location.2.1.0.nupkg.sha512",
+        "microsoft.bot.builder.location.nuspec"
       ]
     },
     "Microsoft.Bot.Configuration/4.2.0": {
@@ -8322,6 +8398,18 @@
         "newtonsoft.json.bson.nuspec"
       ]
     },
+    "NGeoHash/1.2.0": {
+      "sha512": "ocmZoXvHAWo8ng9hqRhT2GREmk99nz70Ba7v5WzUpB1g4bJt60J0pplQl5elBPW61tx1RrGqzDErbbV/ay1BLA==",
+      "type": "package",
+      "path": "ngeohash/1.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/NGeoHash.dll",
+        "ngeohash.1.2.0.nupkg.sha512",
+        "ngeohash.nuspec"
+      ]
+    },
     "Remotion.Linq/2.1.1": {
       "sha512": "rDMM8E0sk7ZRwjXi+Lae4UAgWR8YTV0RT9sW6JcY4qlls5gmGyBkFTXfznKiHPkttM4arBsxkx8vaPZV29R2nQ==",
       "type": "package",
@@ -9105,6 +9193,64 @@
         "ref/xamarinwatchos10/_._",
         "system.collections.specialized.4.3.0.nupkg.sha512",
         "system.collections.specialized.nuspec"
+      ]
+    },
+    "System.ComponentModel/4.0.1": {
+      "sha512": "oBZFnm7seFiVfugsIyOvQCWobNZs7FzqDV/B7tx20Ep/l3UUFCPDkdTnCNaJZTU27zjeODmy2C/cP60u3D4c9w==",
+      "type": "package",
+      "path": "system.componentmodel/4.0.1",
+      "files": [
+        ".nupkg.metadata",
+        "ThirdPartyNotices.txt",
+        "dotnet_library_license.txt",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net45/_._",
+        "lib/netcore50/System.ComponentModel.dll",
+        "lib/netstandard1.3/System.ComponentModel.dll",
+        "lib/portable-net45+win8+wp8+wpa81/_._",
+        "lib/win8/_._",
+        "lib/wp80/_._",
+        "lib/wpa81/_._",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "ref/MonoAndroid10/_._",
+        "ref/MonoTouch10/_._",
+        "ref/net45/_._",
+        "ref/netcore50/System.ComponentModel.dll",
+        "ref/netcore50/System.ComponentModel.xml",
+        "ref/netcore50/de/System.ComponentModel.xml",
+        "ref/netcore50/es/System.ComponentModel.xml",
+        "ref/netcore50/fr/System.ComponentModel.xml",
+        "ref/netcore50/it/System.ComponentModel.xml",
+        "ref/netcore50/ja/System.ComponentModel.xml",
+        "ref/netcore50/ko/System.ComponentModel.xml",
+        "ref/netcore50/ru/System.ComponentModel.xml",
+        "ref/netcore50/zh-hans/System.ComponentModel.xml",
+        "ref/netcore50/zh-hant/System.ComponentModel.xml",
+        "ref/netstandard1.0/System.ComponentModel.dll",
+        "ref/netstandard1.0/System.ComponentModel.xml",
+        "ref/netstandard1.0/de/System.ComponentModel.xml",
+        "ref/netstandard1.0/es/System.ComponentModel.xml",
+        "ref/netstandard1.0/fr/System.ComponentModel.xml",
+        "ref/netstandard1.0/it/System.ComponentModel.xml",
+        "ref/netstandard1.0/ja/System.ComponentModel.xml",
+        "ref/netstandard1.0/ko/System.ComponentModel.xml",
+        "ref/netstandard1.0/ru/System.ComponentModel.xml",
+        "ref/netstandard1.0/zh-hans/System.ComponentModel.xml",
+        "ref/netstandard1.0/zh-hant/System.ComponentModel.xml",
+        "ref/portable-net45+win8+wp8+wpa81/_._",
+        "ref/win8/_._",
+        "ref/wp80/_._",
+        "ref/wpa81/_._",
+        "ref/xamarinios10/_._",
+        "ref/xamarinmac20/_._",
+        "ref/xamarintvos10/_._",
+        "ref/xamarinwatchos10/_._",
+        "system.componentmodel.4.0.1.nupkg.sha512",
+        "system.componentmodel.nuspec"
       ]
     },
     "System.ComponentModel.Annotations/4.4.0": {
@@ -13464,11 +13610,13 @@
       "Microsoft.Bot.Builder.AI.Luis >= 4.2.0",
       "Microsoft.Bot.Builder.Dialogs >= 4.2.0",
       "Microsoft.Bot.Builder.Integration.AspNet.Core >= 4.2.0",
+      "Microsoft.Bot.Builder.Location >= 2.1.0",
       "Microsoft.Bot.Configuration >= 4.2.0",
       "Microsoft.Bot.Connector >= 4.2.0",
       "Microsoft.Bot.Schema >= 4.2.0",
       "Microsoft.NETCore.App >= 2.1.0",
-      "Microsoft.Recognizers.Text.DateTime >= 1.1.4"
+      "Microsoft.Recognizers.Text.DateTime >= 1.1.4",
+      "NGeoHash >= 1.2.0"
     ]
   },
   "packageFolders": {
@@ -13536,6 +13684,10 @@
             "target": "Package",
             "version": "[4.2.0, )"
           },
+          "Microsoft.Bot.Builder.Location": {
+            "target": "Package",
+            "version": "[2.1.0, )"
+          },
           "Microsoft.Bot.Configuration": {
             "target": "Package",
             "version": "[4.2.0, )"
@@ -13556,6 +13708,10 @@
           "Microsoft.Recognizers.Text.DateTime": {
             "target": "Package",
             "version": "[1.1.4, )"
+          },
+          "NGeoHash": {
+            "target": "Package",
+            "version": "[1.2.0, )"
           }
         },
         "imports": [
@@ -13565,5 +13721,17 @@
         "warn": true
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'Microsoft.Bot.Builder.Location 2.1.0' was restored using '.NETFramework,Version=v4.6.1' instead of the project target framework '.NETCoreApp,Version=v2.1'. This package may not be fully compatible with your project.",
+      "libraryId": "Microsoft.Bot.Builder.Location",
+      "targetGraphs": [
+        ".NETCoreApp,Version=v2.1"
+      ]
+    }
+  ]
 }

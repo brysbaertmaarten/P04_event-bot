@@ -12,13 +12,12 @@ namespace EventBot.Models
         // Of de gebruiker geeft een city op
         public string City { get; set; }
 
-        // Of de gebruiker gebruikt zijn locatie (wat resulteerd in lat en long)
-        public float Lat { get; set; }
-        public float Long { get; set; }
+        public string GeoHash { get; set; }
 
         // het aantal km het evenement maximaal mag liggen van de opgegeven plaats
         public float Radius { get; set; }
 
-        public string Date { get; set; }
+        public string StartDate { get; set; }
+        public string EndDate { get; set; }
     }
 }

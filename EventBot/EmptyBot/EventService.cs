@@ -18,11 +18,15 @@ namespace EventBot
         private static string CreateUrl(EventParams eventParams, int page)
         {
             string url = baseUrl;
-            if (!string.IsNullOrWhiteSpace(eventParams.City))
+            if (!string.IsNullOrWhiteSpace(eventParams.City) && eventParams.City != "nearby")
             {
                 url += $"&city={eventParams.City}";
             }
-            if (true)
+            if (eventParams.GeoHash != null)
+            {
+                url += $"&geoPoint={eventParams.GeoHash}";
+            }
+            if (eventParams.Radius > 0)
             {
                 url += $"&radius={eventParams.Radius}";
             }
@@ -30,13 +34,25 @@ namespace EventBot
             {
                 url += $"&classificationName={eventParams.Genre}";
             }
-            if (!string.IsNullOrWhiteSpace(eventParams.Date))
+            if (!string.IsNullOrWhiteSpace(eventParams.StartDate) && !string.IsNullOrWhiteSpace(eventParams.EndDate))
             {
-                string date = eventParams.Date;
-                DateTime d = Convert.ToDateTime(date);
-                date = d.ToString("yyyy-MM-ddTHH:mm:ss");
+                string startDate = eventParams.StartDate;
+                DateTime sd = Convert.ToDateTime(startDate);
 
-                url += $"&localStartDateTime={date},*";
+                string endDate = eventParams.EndDate;
+                DateTime ed = Convert.ToDateTime(endDate);
+
+                // als startdatum overeenkomt met einddatum, tel 1 dag bij de einddatum. Anders wordt er bv
+                // een evenement gezocht tussen 17/01/2019 0:00:00 en 17/01/2019 0:00:00 wat sws uitdraaid op geen resultaten
+                if (sd == ed)
+                {
+                    ed = ed.AddDays(1);
+                }
+
+                startDate = sd.ToString("yyyy-MM-ddTHH:mm:ss");
+                endDate = ed.ToString("yyyy-MM-ddTHH:mm:ss");
+
+                url += $"&localStartDateTime={startDate},{endDate}";
             }
 
             url += $"&page={page}";
@@ -46,7 +62,7 @@ namespace EventBot
             return url;
         }
 
-        public static async Task<List<Event>> GetEventsAsync(EventParams eventParams, int page)
+        public async Task<List<Event>> GetEventsAsync(EventParams eventParams, int page)
         {
             string url = CreateUrl(eventParams, page);
             List<Event> result = new List<Event>();
@@ -64,7 +80,7 @@ namespace EventBot
             return result;
         }
 
-        public static async Task<List<Segment>> GetSegmentsAsync(EventParams eventParams)
+        public async Task<List<Segment>> GetSegmentsAsync(EventParams eventParams)
         {
             int page = 0;
             List<Segment> segments = new List<Segment>();

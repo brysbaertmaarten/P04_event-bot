@@ -3,17 +3,19 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
-using System;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using static EventBot.Models.FacebookChannelData;
 
 namespace EventBot
 {
     public class FindEventDialog
     {
         private const string Dialog = "findEventDialog";
+        public static readonly string LuisKey = "EventBot";
 
         private const string GenrePrompt = "genrePrompt";
         private const string LocationPrompt = "locationPrompt";
@@ -22,11 +24,13 @@ namespace EventBot
 
         public readonly DialogSet _dialogSet;
         private readonly EventBotAccessors _accessors;
+        private readonly EventService eventService;
+        private readonly BotServices services;
         private readonly ILogger _logger;
 
         // The following code creates prompts and adds them to an existing dialog set. The DialogSet contains all the dialogs that can 
         // be used at runtime. The prompts also references a validation method is not shown here.
-        public FindEventDialog(EventBotAccessors accessors, ILoggerFactory loggerFactory)
+        public FindEventDialog(EventBotAccessors accessors, ILoggerFactory loggerFactory, EventService eventService, BotServices services)
         {
             if (loggerFactory == null)
             {
@@ -35,9 +39,11 @@ namespace EventBot
 
             _logger = loggerFactory.CreateLogger<FindEventDialog>();
             _accessors = accessors ?? throw new System.ArgumentNullException(nameof(accessors));
+            this.eventService = eventService;
+            this.services = services;
 
             // Create the dialog set and add the prompts, including custom validation.
-            _dialogSet = new DialogSet(_accessors.DialogStateAccessor);
+            _dialogSet = new DialogSet(_accessors.DialogState);
             _dialogSet.Add(new TextPrompt(GenrePrompt));
             _dialogSet.Add(new TextPrompt(LocationPrompt));
             _dialogSet.Add(new NumberPrompt<float>(RadiusPrompt));
@@ -53,13 +59,16 @@ namespace EventBot
                 ReturnEventsAsync,
             };
             _dialogSet.Add(new WaterfallDialog(Dialog, steps));
+
         }
 
         private async Task<DialogTurnResult> PromptForDateAsync(
             WaterfallStepContext stepContext,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            string date = EventBot.eventParams.Date;
+
+            EventParams eventParams = await _accessors.EventParamState.GetAsync(stepContext.Context);
+            string date = eventParams.StartDate;
             if (date != null)
             {
                 return await stepContext.NextAsync();
@@ -71,7 +80,7 @@ namespace EventBot
                    new PromptOptions
                    {
                        Prompt = MessageFactory.Text("When must the event take place?"),
-                       RetryPrompt = MessageFactory.Text("Please enter a valid time description."),
+                       RetryPrompt = MessageFactory.Text("Please enter a valid time description like 'today', 'this weekend' or '10th of March'. \nEnd this search by typing 'end'"),
                    },
                    cancellationToken
                );
@@ -82,24 +91,46 @@ namespace EventBot
             WaterfallStepContext stepContext,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            string city = EventBot.eventParams.City;
+            EventParams eventParams = await _accessors.EventParamState.GetAsync(stepContext.Context);
+            string city = eventParams.City;
             if (stepContext.Result != null)
             {
                 DateTimeResolution resolution = (stepContext.Result as IList<DateTimeResolution>).First();
-                string date = resolution.Value ?? resolution.Start;
-                EventBot.eventParams.Date = date;
+                if (resolution.Value != null)
+                {
+                    eventParams.StartDate = resolution.Value;
+                    eventParams.EndDate = resolution.Value;
+                }
+                else
+                {
+                    eventParams.StartDate = resolution.Start;
+                    eventParams.EndDate = resolution.End;
+                }
             }
+            await _accessors.EventParamState.SetAsync(stepContext.Context, eventParams);
             if (city != null)
             {
                 return await stepContext.NextAsync();
+            }
+
+            var reply = stepContext.Context.Activity.CreateReply();
+            if (stepContext.Context.Activity.ChannelId == Microsoft.Bot.Connector.Channels.Facebook)
+            {
+                var channelData = JObject.FromObject(new { quick_replies = new dynamic[] { new { content_type = "location" } } });
+                reply.ChannelData = channelData;
+                reply.Text = "Give up a city or send your location to find events nearby.";
+            }
+            else
+            {
+                reply.Text = "Give up a city where the event should take place.";
             }
 
             return await stepContext.PromptAsync(
                 LocationPrompt,
                 new PromptOptions
                 {
-                    Prompt = MessageFactory.Text("Which city should the event take place at?"),
-                    RetryPrompt = MessageFactory.Text("Give up a city please."),
+                    Prompt = reply,
+                    RetryPrompt = MessageFactory.Text("I did not manage to process your location. Please give up a city."),
                 },
                 cancellationToken);
         }
@@ -108,17 +139,43 @@ namespace EventBot
             WaterfallStepContext stepContext,
             CancellationToken cancellationToken = default(CancellationToken))
         {
+            EventParams eventParams = await _accessors.EventParamState.GetAsync(stepContext.Context);
             if (stepContext.Result != null)
             {
-                EventBot.eventParams.City = stepContext.Result.ToString();
+                if (stepContext.Context.Activity.ChannelId == Microsoft.Bot.Connector.Channels.Facebook)
+                {
+                    ChannelData channelData = ChannelHelper.GetChannel(stepContext.Context);
+                    if (channelData.Message != null)
+                    {
+                        string loc = ChannelHelper.GetGeoHash(channelData);
+                        if (loc != null)
+                        {
+                            eventParams.GeoHash = loc;
+                        }
+                    }
+                }
+                if (stepContext.Context.Activity.Text != null)
+                {
+                    var recognizerResult = await services.LuisServices[LuisKey].RecognizeAsync(stepContext.Context, cancellationToken);
+                    eventParams.City = ParseLuis.GetEntities(recognizerResult).City;
+                    if (eventParams.City == null)
+                    {
+                        eventParams.City = stepContext.Result.ToString();
+                    }
+                }
             }
-            return await stepContext.NextAsync(); // tijdelijk (radius alleen opvragen bij gebruik locatie vd gebruiker)
+            await _accessors.EventParamState.SetAsync(stepContext.Context, eventParams);
+            if (eventParams.GeoHash == null || eventParams.Radius > 0)
+            {
+                return await stepContext.NextAsync();
+            }
 
             return await stepContext.PromptAsync(
                 RadiusPrompt,
                 new PromptOptions
                 {
                     Prompt = MessageFactory.Text($"What's the maximum distance in Km from your location?"),
+                    RetryPrompt = MessageFactory.Text($"Please enter a number like '30'. \nEnd this search by typing 'end'"),
                 },
                 cancellationToken);
         }
@@ -127,17 +184,24 @@ namespace EventBot
             WaterfallStepContext stepContext,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (EventBot.eventParams.Genre != null)
+            EventParams eventParams = await _accessors.EventParamState.GetAsync(stepContext.Context);
+            if (eventParams.Genre != null)
             {
                 return await stepContext.NextAsync();
             }
             if (stepContext.Result != null)
             {
-                EventBot.eventParams.Radius = (float)stepContext.Result;
+                eventParams.Radius = (float)stepContext.Result;
+                await _accessors.EventParamState.SetAsync(stepContext.Context, eventParams);
             }
 
+            // bij het wachten toont de bot een "typing" teken
+            var typing = stepContext.Context.Activity.CreateReply();
+            typing.Type = ActivityTypes.Typing;
+            await stepContext.Context.SendActivityAsync(typing);
+
             // vraag segmenten (=genres) op, op basis van ingegeven parameters
-            List<Segment> segments = await EventService.GetSegmentsAsync(EventBot.eventParams);
+            List<Segment> segments = await eventService.GetSegmentsAsync(eventParams);
             // indien geen segmenten (=genres), er zijn geen evenementen gevonden voor deze parameters.
             if (segments.Count == 0)
             {
@@ -161,9 +225,11 @@ namespace EventBot
             WaterfallStepContext stepContext,
             CancellationToken cancellationToken = default(CancellationToken))
         {
+            EventParams eventParams = await _accessors.EventParamState.GetAsync(stepContext.Context);
             if (stepContext.Result != null)
             {
-                EventBot.eventParams.Genre = (string)stepContext.Result;
+                eventParams.Genre = (string)stepContext.Result;
+                await _accessors.EventParamState.SetAsync(stepContext.Context, eventParams);
             }
 
             return await stepContext.EndDialogAsync(cancellationToken);
@@ -182,6 +248,23 @@ namespace EventBot
             }
 
             DateTimeResolution value = promptContext.Recognized.Value.FirstOrDefault();
+            return true;
+        }
+
+        private async Task<bool> LocationValidatorAsync(
+            PromptValidatorContext<Activity> promptContext,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (!promptContext.Recognized.Succeeded)
+            {
+                await promptContext.Context.SendActivityAsync(
+                "Please enter a date of time for your event.",
+                cancellationToken: cancellationToken);
+                return false;
+            }
+
+
+
             return true;
         }
     }

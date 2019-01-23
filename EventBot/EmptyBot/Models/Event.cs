@@ -27,7 +27,31 @@ namespace EventBot.Models
                 public List<Classification> Classifications { get; set; }
                 [JsonProperty(propertyName: "dates")]
                 public Dates Dates { get; set; }
+                [JsonProperty(propertyName: "url")]
+                public string Url { get; set; }
+                [JsonProperty(propertyName: "priceRanges")]
+                public List<PriceRange> PriceRanges { get; set; }
+                [JsonProperty(propertyName: "distance")]
+                public double Distance { get; set; }
+                [JsonProperty(propertyName: "_embedded")]
+                public _Embedded _Embedded { get; set; }
             }
+                public class _Embedded
+                {
+                    [JsonProperty(propertyName: "venues")]
+                    public List<Venue> Venues { get; set; }
+                }
+                    public class Venue
+                    {
+                        [JsonProperty(propertyName: "city")]
+                        public City City { get; set; }
+                    }
+                        public class City
+                        {
+                            [JsonProperty(propertyName: "name")]
+                            public string Name { get; set; }
+                        }
+
                 public class Image
                 {
                     [JsonProperty(propertyName: "url")]
@@ -36,6 +60,16 @@ namespace EventBot.Models
                     public int Width { get; set; }
                     [JsonProperty(propertyName: "height")]
                     public int Height { get; set; }
+                }
+
+                public class PriceRange
+                {
+                    [JsonProperty(propertyName: "currency")]
+                    public string Currency { get; set; }
+                    [JsonProperty(propertyName: "min")]
+                    public double Min { get; set; }
+                    [JsonProperty(propertyName: "max")]
+                    public double Max { get; set; }
                 }
 
                 public class Dates
@@ -47,6 +81,8 @@ namespace EventBot.Models
                     {
                         [JsonProperty(propertyName: "dateTime")]
                         public DateTime DateTime { get; set; }
+                        [JsonProperty(propertyName: "localDate")]
+                        public DateTime LocalDate { get; set; }
                     }
 
                 public class Classification

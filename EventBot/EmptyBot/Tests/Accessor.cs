@@ -53,8 +53,6 @@ namespace EventBot.Tests
             {
                 // haalt het bericht op dat de gebruiker stuurde
                 string value = turnContext.Activity.Text;
-                // haalt de eventState op (GetAsync)
-                var eventState = await accessors.EventAccessor.GetAsync(turnContext, () => null, cancellationToken);
 
                 // nieuw evenement maken op basis van wat de gebruiker stuurde
                 EventParams newEvent = new EventParams()
@@ -62,12 +60,8 @@ namespace EventBot.Tests
                     Genre = value,
                 };
 
-                // nieuwe waarde toewijzen aan de EventAccesor (SetAsync)
-                await accessors.EventAccessor.SetAsync(turnContext, newEvent, cancellationToken);
                 // nieuwe waarde van de eventAccessor opslaan
                 await accessors.ConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
-                // bericht verzenden naar gebruiker met eventstate (zal de eerste keer null zijn)
-                await turnContext.SendActivityAsync(eventState.Genre, cancellationToken: cancellationToken);
             }
         }
     }

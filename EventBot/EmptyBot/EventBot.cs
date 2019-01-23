@@ -10,9 +10,13 @@ using System.Threading.Tasks;
 using EventBot.Models;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Location;
 using Microsoft.Bot.Schema;
 using Microsoft.Recognizers.Text;
 using Microsoft.Recognizers.Text.DateTime;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using static EventBot.Models.FacebookChannelData;
 
 namespace EventBot
 {
@@ -23,17 +27,17 @@ namespace EventBot
         private readonly EventBotAccessors accessors;
         private readonly FindEventDialog findEventDialog;
         private readonly BotServices services;
-
-        public static EventParams eventParams = new EventParams();
+        private readonly EventService eventService;
         public static int pageCount = 0;
 
         DialogTurnResult dialogTurnResult = new DialogTurnResult(DialogTurnStatus.Empty);
 
-        public EventBot(EventBotAccessors accessors, FindEventDialog findEventDialog, BotServices services)
+        public EventBot(EventBotAccessors accessors, FindEventDialog findEventDialog, BotServices services, EventService eventService)
         {
             this.accessors = accessors;
             this.findEventDialog = findEventDialog;
             this.services = services ?? throw new System.ArgumentNullException(nameof(services));
+            this.eventService = eventService;
             if (!services.LuisServices.ContainsKey(LuisKey))
             {
                 throw new System.ArgumentException($"Invalid configuration....");
@@ -44,64 +48,128 @@ namespace EventBot
         {
             if (turnContext.Activity.Type == ActivityTypes.Message)
             {
-                // input doorsturen naar LUIS API
-                var recognizerResult = await services.LuisServices[LuisKey].RecognizeAsync(turnContext, cancellationToken);
-                //var recognizerResult = await services.LuisServices[LuisKey].RecognizeAsync(turnContext, cancellationToken);
-                var intent = recognizerResult?.GetTopScoringIntent().intent;
+                RecognizerResult recognizerResult = new RecognizerResult();
+                string intent = "";
+                string message = "";
+                if (turnContext.Activity.Text != null)
+                {
+                    // input doorsturen naar LUIS API
+                    message = turnContext.Activity.Text.ToLower();
+                    recognizerResult = await services.LuisServices[LuisKey].RecognizeAsync(turnContext, cancellationToken);
+                    intent = recognizerResult?.GetTopScoringIntent().intent;
+                }
 
                 // Generate a dialog context for our dialog set.
                 DialogContext dc = await findEventDialog._dialogSet.CreateContextAsync(turnContext, cancellationToken);
 
+                // eventParams ophalen uit store
+                EventParams eventParams = await accessors.EventParamState.GetAsync(turnContext, () => null, cancellationToken);
+
                 // Als er geen dialoog bezig is
                 if (dc.ActiveDialog is null)
                 {
-                    switch (intent)
+                    var reply = turnContext.Activity.CreateReply();
+                    string suggestedAnswer;
+                    switch (message)
                     {
-                        case "FindEventIntent":
-                            // Check if there are entities recognized (moet voor het begin van het dialog)
-                            eventParams = ParseLuis.GetEntities(recognizerResult); pageCount = 0;
-                            // start new dialog 
+                        case "change location":
+                            eventParams.City = null; eventParams.GeoHash = null; pageCount = 0; eventParams.Radius = 0;
+                            await accessors.EventParamState.SetAsync(turnContext, eventParams);
                             dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
                             break;
-                        case "GreetingIntent":
-                            var greetingReply = turnContext.Activity.CreateReply();
-                            greetingReply.Text = MessageService.GetMessage("GreetingAnswer"); // geeft een random antwoord van de greetingAnswer list terug
-                            greetingReply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "Find me an event!" });
-                            await turnContext.SendActivityAsync(greetingReply);
-                            break;
-                        case "ThankIntent":
-                            string thankReply = MessageService.GetMessage("ThankAnswer");
-                            await turnContext.SendActivityAsync(thankReply);
-                            break;
-                        case "ChangeDateIntent":
-                            eventParams.Date = null; pageCount = 0;
-                            dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
-                            break;
-                        case "ChangeCityIntent":
-                            eventParams.City = ParseLuis.GetEntities(recognizerResult).City;
-                            dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
-                            break;
-                        case "ChangeGenreIntent":
+                        case "change genre":
                             eventParams.Genre = null; pageCount = 0;
+                            await accessors.EventParamState.SetAsync(turnContext, eventParams);
                             dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
                             break;
-                        case "MoreEventsIntent":
+                        case "more":
                             pageCount += 1;
                             dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
                             break;
-                        case "None":
+                        case "change date":
+                            eventParams.StartDate = null; pageCount = 0;
+                            await accessors.EventParamState.SetAsync(turnContext, eventParams);
+                            dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
+                            break;
+                        default:
+                            switch (intent)
+                            {
+                                case "FindEventIntent":
+                                    // Check if there are entities recognized (moet voor het begin van het dialog)
+                                    eventParams = ParseLuis.GetEntities(recognizerResult);
+                                    await accessors.EventParamState.SetAsync(turnContext, eventParams);
+                                    pageCount = 0;
+                                    // start new dialog 
+                                    dialogTurnResult = await dc.BeginDialogAsync("findEventDialog", null, cancellationToken);
+                                    break;
+                                case "GreetingIntent":
+                                    reply = turnContext.Activity.CreateReply();
+                                    reply.Text = MessageService.GetMessage("GreetingAnswer"); // geeft een random antwoord van de greetingAnswer list terug
+                                    suggestedAnswer = MessageService.GetMessage("FindEventSuggestedAnswer");
+                                    reply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { suggestedAnswer });
+                                    await turnContext.SendActivityAsync(reply);
+                                    break;
+                                case "ThankIntent":
+                                    string thankReply = MessageService.GetMessage("ThankAnswer");
+                                    await turnContext.SendActivityAsync(thankReply);
+                                    break;
+                                case "GoodByeIntent":
+                                    string goodByeReply = MessageService.GetMessage("GoodByeAnswer");
+                                    await turnContext.SendActivityAsync(goodByeReply);
+                                    break;
+                                case "GetAgeIntent":
+                                    reply.Text = MessageService.GetMessage("GetAgeAnswer");
+                                    await turnContext.SendActivityAsync(reply);
+                                    break;
+                                case "HowAreYouIntent":
+                                    reply.Text = MessageService.GetMessage("HowAreYouAnswer");
+                                    suggestedAnswer = MessageService.GetMessage("FindEventSuggestedAnswer");
+                                    reply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { suggestedAnswer });
+                                    await turnContext.SendActivityAsync(reply);
+                                    break;
+                                case "GetNameIntent":
+                                    reply.Text = MessageService.GetMessage("GetNameAnswer");
+                                    suggestedAnswer = MessageService.GetMessage("FindEventSuggestedAnswer");
+                                    reply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { suggestedAnswer });
+                                    await turnContext.SendActivityAsync(reply);
+                                    break;
+                                case "TellJokeIntent":
+                                    reply.Text = MessageService.GetMessage("TellJokeAnswer");
+                                    await turnContext.SendActivityAsync(reply);
+                                    //reply.Text = await JokeService.GetJoke();
+                                    reply.Text = "How does a computer get drunk? It takes screenshots.";
+                                    await turnContext.SendActivityAsync(reply);
+                                    break;
+                                case "None":
+                                    var noneReply = turnContext.Activity.CreateReply();
+                                    noneReply.Text = MessageService.GetMessage("NoneAnswer");
+                                    suggestedAnswer = MessageService.GetMessage("FindEventSuggestedAnswer");
+                                    noneReply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { suggestedAnswer });
+                                    await turnContext.SendActivityAsync(noneReply);
+                                    break;
+                                case "EmptyIntent":
+                                    break;
+                            }
                             break;
                     }
                 }
                 else
                 {
                     // Continue the dialog.
-                    switch (intent)
+                    if (dc.ActiveDialog.Id == "locationPrompt")
                     {
-                        case "QuitIntent":
+                        if (turnContext.Activity.Attachments != null)
+                        {
+                            turnContext.Activity.Text = "nearby";
+                        }
+                    }
+                    switch (message)
+                    {
+                        case "end":
                             dialogTurnResult = await dc.CancelAllDialogsAsync(cancellationToken);
                             break;
                         default:
+                            //var test = dc.ActiveDialog.State.Values.First(). = null;
                             dialogTurnResult = await dc.ContinueDialogAsync(cancellationToken);
                             break;
                     }
@@ -110,7 +178,12 @@ namespace EventBot
                 // If the dialog completed this turn, doe iets met de eventParams
                 if (dialogTurnResult.Status is DialogTurnStatus.Complete)
                 {
-                    List<Event> events = await EventService.GetEventsAsync(eventParams, pageCount);
+                    // bij het wachten toont de bot een "typing" teken
+                    var typing = turnContext.Activity.CreateReply();
+                    typing.Type = ActivityTypes.Typing;
+                    await turnContext.SendActivityAsync(typing);
+
+                    List<Event> events = await eventService.GetEventsAsync(eventParams, pageCount);
                     var reply = turnContext.Activity.CreateReply();
 
                     if (events.Count() != 0)
@@ -118,28 +191,46 @@ namespace EventBot
                         reply.Text = CreateActivity.GetTextForFoundEvents(eventParams);
                         reply.Attachments = CreateActivity.GetAttachementForFoundEvents(events);
                         reply.AttachmentLayout = "carousel";
-                        reply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "more", "change genre", "change city" });
+                        List<string> suggestedActions = new List<string>();
+                        if (events.Count() == 10)
+                        {
+                            suggestedActions.Add("more");
+                        }
+                        suggestedActions.Add("change genre"); suggestedActions.Add("change location"); suggestedActions.Add("change date");
+                        reply.SuggestedActions = CreateActivity.CreateSuggestedAction(suggestedActions);
                     }
                     else
                     {
                         reply.Text = CreateActivity.GetTextForNoEventsFound(eventParams);
-                        if (eventParams.Genre == null)
+                        if (eventParams.Genre == null || eventParams.Genre.ToLower() == "none")
                         {
-                            reply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "change city" });
+                            reply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "change location", "change date" });
                         }
                         else
                         {
-                            reply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "change genre", "change city" });
+                            reply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "change genre", "change location", "change date" });
                         }
                     }
-
+               
                     // send reply
                     await turnContext.SendActivityAsync(reply);
                 }
-
-                // Save the updated dialog state into the conversation state.
-                await accessors.ConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
             }
+            else if (turnContext.Activity.Type == ActivityTypes.ConversationUpdate)
+            {
+                bool DidWelcome = await accessors.DidWelcomeState.GetAsync(turnContext, () => false, cancellationToken);
+                if (!DidWelcome)
+                {
+                    //var greetingReply = turnContext.Activity.CreateReply();
+                    //greetingReply.Text = MessageService.GetMessage("GreetingAnswer"); // geeft een random antwoord van de greetingAnswer list terug
+                    //greetingReply.SuggestedActions = CreateActivity.CreateSuggestedAction(new List<string>() { "Find me an event!" });
+                    //await turnContext.SendActivityAsync(greetingReply);
+                    //await accessors.DidWelcomeState.SetAsync(turnContext, true);
+                }
+            }
+
+            // Save the updated dialog state into the conversation state.
+            await accessors.ConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
         }
     }
 }

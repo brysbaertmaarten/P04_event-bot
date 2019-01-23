@@ -1,7 +1,7 @@
 {
   "runtimeTarget": {
     "name": ".NETCoreApp,Version=v2.1",
-    "signature": "cba11e2ea955e99ab9c514c5327545e22fb67804"
+    "signature": "cb7c4fb86b6aa561b0826a88e911b514fb604cc8"
   },
   "compilationOptions": {
     "defines": [
@@ -30,17 +30,34 @@
           "Microsoft.Bot.Builder.AI.Luis": "4.2.0",
           "Microsoft.Bot.Builder.Dialogs": "4.2.0",
           "Microsoft.Bot.Builder.Integration.AspNet.Core": "4.2.0",
+          "Microsoft.Bot.Builder.Location": "2.1.0",
           "Microsoft.Bot.Configuration": "4.2.0",
           "Microsoft.Bot.Connector": "4.2.0",
           "Microsoft.Bot.Schema": "4.2.0",
           "Microsoft.NETCore.App": "2.1.0",
-          "Microsoft.Recognizers.Text.DateTime": "1.1.4"
+          "Microsoft.Recognizers.Text.DateTime": "1.1.4",
+          "NGeoHash": "1.2.0"
         },
         "runtime": {
           "EventBot.dll": {}
         },
         "compile": {
           "EventBot.dll": {}
+        }
+      },
+      "Autofac/4.1.1": {
+        "dependencies": {
+          "NETStandard.Library": "2.0.3",
+          "System.ComponentModel": "4.0.1"
+        },
+        "runtime": {
+          "lib/netstandard1.1/Autofac.dll": {
+            "assemblyVersion": "4.1.1.0",
+            "fileVersion": "4.1.1.0"
+          }
+        },
+        "compile": {
+          "lib/netstandard1.1/Autofac.dll": {}
         }
       },
       "Libuv/1.10.0": {
@@ -1802,6 +1819,23 @@
           "lib/netstandard2.0/Microsoft.Bot.Builder.Integration.AspNet.Core.dll": {}
         }
       },
+      "Microsoft.Bot.Builder.Location/2.1.0": {
+        "dependencies": {
+          "Autofac": "4.1.1",
+          "Microsoft.Bot.Builder": "4.2.0",
+          "Microsoft.Rest.ClientRuntime": "2.3.13",
+          "Newtonsoft.Json": "11.0.2"
+        },
+        "runtime": {
+          "lib/net46/Microsoft.Bot.Builder.Location.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        },
+        "compile": {
+          "lib/net46/Microsoft.Bot.Builder.Location.dll": {}
+        }
+      },
       "Microsoft.Bot.Configuration/4.2.0": {
         "dependencies": {
           "Newtonsoft.Json": "11.0.2",
@@ -3107,6 +3141,17 @@
           "lib/netstandard1.3/Newtonsoft.Json.Bson.dll": {}
         }
       },
+      "NGeoHash/1.2.0": {
+        "runtime": {
+          "lib/netstandard2.0/NGeoHash.dll": {
+            "assemblyVersion": "1.2.0.0",
+            "fileVersion": "1.2.0.0"
+          }
+        },
+        "compile": {
+          "lib/netstandard2.0/NGeoHash.dll": {}
+        }
+      },
       "Remotion.Linq/2.1.1": {
         "dependencies": {
           "System.Collections": "4.3.0",
@@ -3469,6 +3514,11 @@
           "System.Runtime": "4.3.0",
           "System.Runtime.Extensions": "4.3.0",
           "System.Threading": "4.3.0"
+        }
+      },
+      "System.ComponentModel/4.0.1": {
+        "dependencies": {
+          "System.Runtime": "4.3.0"
         }
       },
       "System.ComponentModel.Annotations/4.4.0": {},
@@ -4756,6 +4806,13 @@
       "serviceable": false,
       "sha512": ""
     },
+    "Autofac/4.1.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-WnKEFFGluvXFzjSi+9XmbJy7A89tmrnMYY6oGCFr7YD1+AA+T736YZEFShifD1glm+ka/ManKfp60J5aY6WJ9A==",
+      "path": "autofac/4.1.1",
+      "hashPath": "autofac.4.1.1.nupkg.sha512"
+    },
     "Libuv/1.10.0": {
       "type": "package",
       "serviceable": true,
@@ -5435,6 +5492,13 @@
       "path": "microsoft.bot.builder.integration.aspnet.core/4.2.0",
       "hashPath": "microsoft.bot.builder.integration.aspnet.core.4.2.0.nupkg.sha512"
     },
+    "Microsoft.Bot.Builder.Location/2.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-CZfmn78BhpUAMMgP/tjiliNl2XlCL2aktYk1/I8U4AYFHEr80jMHgHLy7hHL3pv/VQRSfU/qmK1TVvJ9qGfKRg==",
+      "path": "microsoft.bot.builder.location/2.1.0",
+      "hashPath": "microsoft.bot.builder.location.2.1.0.nupkg.sha512"
+    },
     "Microsoft.Bot.Configuration/4.2.0": {
       "type": "package",
       "serviceable": true,
@@ -6009,6 +6073,13 @@
       "path": "newtonsoft.json.bson/1.0.1",
       "hashPath": "newtonsoft.json.bson.1.0.1.nupkg.sha512"
     },
+    "NGeoHash/1.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ocmZoXvHAWo8ng9hqRhT2GREmk99nz70Ba7v5WzUpB1g4bJt60J0pplQl5elBPW61tx1RrGqzDErbbV/ay1BLA==",
+      "path": "ngeohash/1.2.0",
+      "hashPath": "ngeohash.1.2.0.nupkg.sha512"
+    },
     "Remotion.Linq/2.1.1": {
       "type": "package",
       "serviceable": true,
@@ -6267,6 +6338,13 @@
       "sha512": "sha512-Fzk2OaH8G+4cPr/IhzlEsV2Four9t07uzdlVHLRxZ0liBdiEfqdDdfVBqb1o9IhQf0DRMsdV94m5fQQ2zJnRCQ==",
       "path": "system.collections.specialized/4.3.0",
       "hashPath": "system.collections.specialized.4.3.0.nupkg.sha512"
+    },
+    "System.ComponentModel/4.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-oBZFnm7seFiVfugsIyOvQCWobNZs7FzqDV/B7tx20Ep/l3UUFCPDkdTnCNaJZTU27zjeODmy2C/cP60u3D4c9w==",
+      "path": "system.componentmodel/4.0.1",
+      "hashPath": "system.componentmodel.4.0.1.nupkg.sha512"
     },
     "System.ComponentModel.Annotations/4.4.0": {
       "type": "package",

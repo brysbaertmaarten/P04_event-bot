@@ -28,8 +28,9 @@ namespace EventBot
                 var text = instance["datetime"][0]["text"].ToString();
                 try
                 {
-                    DateTime d = ParseDateEntitie(text);
-                    eventParams.Date = d.ToString();
+                    List<DateTime> dates = ParseDateEntitie(text);
+                    eventParams.StartDate = dates[0].ToString();
+                    eventParams.EndDate = dates[1].ToString();
                 }
                 catch (Exception)
                 {
@@ -48,10 +49,12 @@ namespace EventBot
             return eventParams;
         }
 
-        public static DateTime ParseDateEntitie(string entitie)
+        public static List<DateTime> ParseDateEntitie(string entitie)
         {
             var culture = Culture.English;
             var d = DateTimeRecognizer.RecognizeDateTime(entitie, culture);
+
+            List<DateTime> dates = new List<DateTime>();
 
             var first = d.First();
             var subType = first.TypeName.Split('.').Last();
@@ -60,22 +63,16 @@ namespace EventBot
             {
                 // a date (or date & time) or multiple
                 var moment = resolutionValues.Select(v => DateTime.Parse(v["value"])).FirstOrDefault();
-
-                return moment;
-
+                dates.Add(moment); // start
+                dates.Add(moment); // end
             }
             else if (subType.Contains("date") && subType.Contains("range"))
             {
                 // range
-                var from = DateTime.Parse(resolutionValues.First()["start"]);
-                var to = DateTime.Parse(resolutionValues.First()["end"]);
-
-                return from;
+                dates.Add(DateTime.Parse(resolutionValues.First()["start"]));
+                dates.Add(DateTime.Parse(resolutionValues.First()["end"]));
             }
-            else
-            {
-                return DateTime.Now;
-            }
+            return dates;
         }        
     }
 }

@@ -86,6 +86,7 @@ namespace EventBot
             });
 
             services.AddSingleton<FindEventDialog>();
+            services.AddSingleton<EventService>();
 
             services.AddSingleton<EventBotAccessors>(sp =>
             {
@@ -105,8 +106,9 @@ namespace EventBot
                 // State accessors enable other components to read and write individual properties of state.
                 var accessors = new EventBotAccessors(conversationState)
                 {
-                    DialogStateAccessor = conversationState.CreateProperty<DialogState>(EventBotAccessors.DialogStateAccessorKey),
-                    EventAccessor = conversationState.CreateProperty<EventParams>(EventBotAccessors.EventAccessorKey),
+                    DialogState = conversationState.CreateProperty<DialogState>(EventBotAccessors.DialogStateAccessorKey),
+                    EventParamState = conversationState.CreateProperty<EventParams>(EventBotAccessors.EventParamStateAccessorKey),
+                    DidWelcomeState = conversationState.CreateProperty<bool>(EventBotAccessors.DidWelcomeStateAccessorKey),
                 };
 
                 return accessors;

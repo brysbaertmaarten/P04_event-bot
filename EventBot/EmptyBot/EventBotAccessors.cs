@@ -16,10 +16,12 @@ namespace EventBot
         }
 
         public static string DialogStateAccessorKey { get; } = "EventBotAccessors.DialogState";
-        public static string EventAccessorKey { get; } = "EventBotAccessors.Event";
+        public static string EventParamStateAccessorKey { get; } = "EventBotAccessors.EventParamState";
+        public static string DidWelcomeStateAccessorKey { get; } = "EventBotAccessors.DidWelcomeState";
 
-        public IStatePropertyAccessor<DialogState> DialogStateAccessor { get; set; }
-        public IStatePropertyAccessor<EventParams> EventAccessor { get; set; }
+        public IStatePropertyAccessor<DialogState> DialogState { get; set; }
+        public IStatePropertyAccessor<EventParams> EventParamState { get; set; }
+        public IStatePropertyAccessor<bool> DidWelcomeState { get; set; }
 
         public ConversationState ConversationState { get; }
     }

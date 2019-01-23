@@ -2,13 +2,54 @@
   "GreetingAnswer": [
     "Hello! I can help you find events!",
     "Howdy, let me help you find an event!",
-    "Hi there! I'll help you find events!",
-    "Hi!"
+    "Hi there! I'll help you find an event!",
+    "Hi!",
+    "Hello! If you are looking for events, I think I can help you!"
   ],
   "ThankAnswer": [
     "No problem!",
     "That's what I'm here for :)",
     "I should thank you, I was starting to get bored... :p",
-    "You're welcome!"
+    "You're welcome!",
+    "Absolutely no problem! :p"
+  ],
+  "GoodByeAnswer": [
+    "Bye!",
+    "See you later!",
+    "Hope to see you soon again!",
+    "Enjoy your event!",
+    "Bye! Do not hesitate to ask me for help if needed."
+  ],
+  "GetAgeAnswer": [
+    "I'm old enough to help you find an event! :p"
+  ],
+  "GetNameAnswer": [
+    "I'm Mr. Eventbot. :) I can help you find events!",
+    "My name is Eventbot. Helping you find events is my job!"
+  ],
+  "HowAreYouAnswer": [
+    "I'm good, but I'd feel better if I could help you find an event ;)",
+    "Excellent! Thanks for asking! ;)",
+    "Not that good, I'm bored... Helping you find an event would make me happy :D"
+  ],
+  "TellJokeAnswer": [
+    "You should know that's not really what I'm made for... But I can give it a try!",
+    "I'd rather help you find an event but ok, here it comes...",
+    "A joke? I'm better at finding events :) but I'll try it."
+  ],
+  "NoneAnswer": [
+    "I'm sorry, I did not understand that. I can only help you find events.",
+    "I did not understand that. I'm still learning, you know!",
+    "I didn't understand that. Till now I can only help you find events.",
+    "I did not get that. I can only help you find events!",
+    "Can't help you with that, but I can help you find events!",
+    "I can only help you with one thing, but I'm really good at it!",
+    "I'm not good at talking, only if it's about events!"
+  ],
+  "FindEventSuggestedAnswer": [
+    "Find event!",
+    "Events this weekend",
+    "What can I do tonight?",
+    "Help me find an event"
   ]
 }

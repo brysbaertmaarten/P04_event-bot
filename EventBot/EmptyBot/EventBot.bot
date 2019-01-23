@@ -21,10 +21,10 @@
       "type": "luis",
       "name": "EventBot",
       "verbose": true,
-      "appId": "436a54ca-76d6-489a-9eaf-8423eb54ffb2",
+      "appId": "92a11aa4-6b32-40f2-a6ea-0fdc52e4abd0",
       "version": "0.1",
       "authoringKey": "87f4a52042f74c52986610c267affc1e",
-      "subscriptionKey": "https://centralus.api.cognitive.microsoft.com/luis/v2.0/apps/436a54ca-76d6-489a-9eaf-8423eb54ffb2?verbose=true&timezoneOffset=-360&subscription-key=87f4a52042f74c52986610c267affc1e&q=",
+      "subscriptionKey": "https://centralus.api.cognitive.microsoft.com/luis/v2.0/apps/92a11aa4-6b32-40f2-a6ea-0fdc52e4abd0?verbose=true&timezoneOffset=-360&subscription-key=87f4a52042f74c52986610c267affc1e&q=",
       "region": "centralus",
       "id": "158"
     }
